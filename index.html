@@ -15,7 +15,7 @@
     <div class="home-ui">
       <p class="home-kicker">TSA · original arcade crawl</p>
       <h1 class="home-title"><span class="home-title-line">SHARD</span> <span class="home-title-accent">CIRCUIT</span></h1>
-      <p class="home-tagline">You’re Juno Hale, the person they call when a job sounds boring until it isn’t. This basement still wants its chips back, so grab the greens, dodge the mess, and put Cinder down in the core.</p>
+      <p class="home-tagline">You’re Juno Hale, ARC’s field jumper. Dr. Roth pulls you off leave to hit Kepler IV-b: the relay team vanished, and an old stack called Cinder is hoarding beacon keys. Clear the lab, pass the training sim, take the portal, then burn through five stages and end Cinder in the core.</p>
 
       <section class="home-howto" aria-labelledby="howtoHeading">
         <h2 id="howtoHeading">How to play</h2>
@@ -33,16 +33,12 @@
         <span id="homeLevelLabel" class="home-level-select">Start stage</span>
         <div class="home-level-picker" id="homeLevelPicker">
           <select id="homeStartLevel" class="home-start-level-sr" tabindex="-1" aria-hidden="true">
-            <option value="1" selected>1 - Sub Basement</option>
-            <option value="2">2 - Needle Row</option>
-            <option value="3">3 - Two Doors</option>
-            <option value="4">4 - Cold Storage</option>
-            <option value="5">5 - Strobe Hall</option>
-            <option value="6">6 - Holdout</option>
-            <option value="7">7 - Lockers</option>
-            <option value="8">8 - Spill Tray</option>
-            <option value="9">9 - Weight Class</option>
-            <option value="10">10 - Boss: Cinder</option>
+            <option value="1" selected>1 - ARC Lab Deck</option>
+            <option value="2">2 - Training Sim</option>
+            <option value="3">3 - Dust Step</option>
+            <option value="4">4 - Rift Trench</option>
+            <option value="5">5 - Citadel Approach</option>
+            <option value="6">6 - Boss: Cinder Core</option>
           </select>
           <button
             type="button"
@@ -57,7 +53,7 @@
             <span class="home-level-trigger-inner">
               <span class="home-level-num" id="homeLevelNum">01</span>
               <span class="home-level-divider" aria-hidden="true"></span>
-              <span class="home-level-name" id="homeLevelName">Sub Basement</span>
+              <span class="home-level-name" id="homeLevelName">ARC Lab Deck</span>
             </span>
             <span class="home-level-chevron" aria-hidden="true"></span>
           </button>
@@ -70,34 +66,22 @@
             hidden
           >
             <button type="button" class="home-level-option is-selected" role="option" data-value="1" aria-selected="true">
-              <span class="home-level-opt-num">01</span><span class="home-level-opt-name">Sub Basement</span>
+              <span class="home-level-opt-num">01</span><span class="home-level-opt-name">ARC Lab Deck</span>
             </button>
             <button type="button" class="home-level-option" role="option" data-value="2" aria-selected="false">
-              <span class="home-level-opt-num">02</span><span class="home-level-opt-name">Needle Row</span>
+              <span class="home-level-opt-num">02</span><span class="home-level-opt-name">Training Sim</span>
             </button>
             <button type="button" class="home-level-option" role="option" data-value="3" aria-selected="false">
-              <span class="home-level-opt-num">03</span><span class="home-level-opt-name">Two Doors</span>
+              <span class="home-level-opt-num">03</span><span class="home-level-opt-name">Dust Step</span>
             </button>
             <button type="button" class="home-level-option" role="option" data-value="4" aria-selected="false">
-              <span class="home-level-opt-num">04</span><span class="home-level-opt-name">Cold Storage</span>
+              <span class="home-level-opt-num">04</span><span class="home-level-opt-name">Rift Trench</span>
             </button>
             <button type="button" class="home-level-option" role="option" data-value="5" aria-selected="false">
-              <span class="home-level-opt-num">05</span><span class="home-level-opt-name">Strobe Hall</span>
+              <span class="home-level-opt-num">05</span><span class="home-level-opt-name">Citadel Approach</span>
             </button>
-            <button type="button" class="home-level-option" role="option" data-value="6" aria-selected="false">
-              <span class="home-level-opt-num">06</span><span class="home-level-opt-name">Holdout</span>
-            </button>
-            <button type="button" class="home-level-option" role="option" data-value="7" aria-selected="false">
-              <span class="home-level-opt-num">07</span><span class="home-level-opt-name">Lockers</span>
-            </button>
-            <button type="button" class="home-level-option" role="option" data-value="8" aria-selected="false">
-              <span class="home-level-opt-num">08</span><span class="home-level-opt-name">Spill Tray</span>
-            </button>
-            <button type="button" class="home-level-option" role="option" data-value="9" aria-selected="false">
-              <span class="home-level-opt-num">09</span><span class="home-level-opt-name">Weight Class</span>
-            </button>
-            <button type="button" class="home-level-option home-level-option-boss" role="option" data-value="10" aria-selected="false">
-              <span class="home-level-opt-num">10</span><span class="home-level-opt-name">Boss: Cinder</span>
+            <button type="button" class="home-level-option home-level-option-boss" role="option" data-value="6" aria-selected="false">
+              <span class="home-level-opt-num">06</span><span class="home-level-opt-name">Boss: Cinder Core</span>
             </button>
           </div>
         </div>

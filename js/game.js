@@ -372,7 +372,8 @@
       cutsceneSlotLeft.hidden = false;
       cutsceneSlotRight.hidden = true;
       cutsceneSlotLeft.classList.add("is-active");
-      Story.drawPortraitFrame("system", portraitLeftCtx, PW, PH, cutsceneTime, true, false);
+      const sysSp = slide.speaker === "director" ? "director" : "system";
+      Story.drawPortraitFrame(sysSp, portraitLeftCtx, PW, PH, cutsceneTime, true, false);
     } else if (layout.mode === "dual") {
       cutsceneSlotLeft.hidden = false;
       cutsceneSlotRight.hidden = false;

@@ -37,6 +37,12 @@
     if (speaker === "system") {
       return nameMatch(/zira|samantha|microsoft/i) || list[0];
     }
+    if (speaker === "director") {
+      return (
+        nameMatch(/male|daniel|fred|thomas|david|james|mark/i) ||
+        list[Math.min(list.length - 1, Math.floor(list.length * 0.55))]
+      );
+    }
     return list[Math.floor(list.length * 0.45)] || list[0];
   }
 
@@ -60,6 +66,9 @@
     } else if (speaker === "system") {
       u.pitch = 0.92;
       u.rate = 0.93;
+    } else if (speaker === "director") {
+      u.pitch = 0.84;
+      u.rate = 0.94;
     } else {
       u.pitch = 1;
       u.rate = 0.98;

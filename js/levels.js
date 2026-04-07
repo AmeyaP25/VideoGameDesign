@@ -1,7 +1,7 @@
 /**
- * Shard Circuit: 10 stages, easy to hard, boss finale. 20x11 ASCII maps.
+ * Shard Circuit: 5 mission stages + boss (6 total). Lab, training sim, portal to planet, Cinder.
  * # wall  . empty  m mud  ^ spike  G gate  ~ ice  > boost
- * S chip  E exit  P spawn  * pulse  T/U teleporter (paired in order)  C scrap  H Z powerups  R sidearm
+ * S chip  E exit  P spawn  * pulse  T/U teleporter  C scrap  H Z powerups  R sidearm
  */
 (function () {
   "use strict";
@@ -12,7 +12,7 @@
   const RAW_LEVELS = [
     {
       id: 1,
-      name: "Sub Basement",
+      name: "ARC Lab Deck",
       sector: 1,
       objective: { kind: "collect_exit" },
       enemies: [{ type: "patrol", tx: 10, ty: 8, axis: "h", speed: 20 }],
@@ -32,7 +32,7 @@
     },
     {
       id: 2,
-      name: "Needle Row",
+      name: "Training Sim",
       sector: 1,
       objective: { kind: "collect_exit" },
       enemies: [{ type: "patrol", tx: 9, ty: 5, axis: "v", speed: 24 }],
@@ -52,8 +52,8 @@
     },
     {
       id: 3,
-      name: "Two Doors",
-      sector: 1,
+      name: "Dust Step",
+      sector: 2,
       objective: { kind: "collect_exit" },
       enemies: [
         { type: "patrol", tx: 4, ty: 9, axis: "h", speed: 22 },
@@ -75,28 +75,8 @@
     },
     {
       id: 4,
-      name: "Cold Storage",
-      sector: 2,
-      objective: { kind: "subset_exit", min: 5 },
-      enemies: [{ type: "sentry", tx: 9, ty: 0, period: 2.2 }],
-      lines: [
-        "####################",
-        "#S~~~~S~~~~~~S~~~~S#",
-        "#~~~~~~~~~~~~~~~~~~#",
-        "#P~~~~~~~~~~~~~~~~~#",
-        "#~~~~~~~~~~~~~~~~~~#",
-        "#~~~~~~S~~~~S~~~~~~#",
-        "#~~~~~~~~~~~~~~~~~~#",
-        "#~~~~~>~~~~~~>~~~~~#",
-        "#~~~~~~~~~~~~~~E~~~#",
-        "#....C...C...C.....#",
-        "####################",
-      ],
-    },
-    {
-      id: 5,
-      name: "Strobe Hall",
-      sector: 2,
+      name: "Rift Trench",
+      sector: 3,
       objective: { kind: "collect_exit" },
       enemies: [
         { type: "patrol", tx: 2, ty: 4, axis: "h", speed: 32 },
@@ -117,76 +97,8 @@
       ],
     },
     {
-      id: 6,
-      name: "Holdout",
-      sector: 3,
-      objective: { kind: "survive_exit", seconds: 16 },
-      enemies: [
-        { type: "pursuer", tx: 16, ty: 3, speed: 24 },
-        { type: "sentry", tx: 4, ty: 8, period: 1.85 },
-        { type: "sentry", tx: 14, ty: 8, period: 1.85 },
-      ],
-      lines: [
-        "####################",
-        "#*.......^^......*.#",
-        "#.........mm.......#",
-        "#....##########....#",
-        "#....#........#....#",
-        "#..P.#........#.E..#",
-        "#....#........#....#",
-        "#....##########....#",
-        "#S......C......S...#",
-        "#.....^^*..*^^.....#",
-        "####################",
-      ],
-    },
-    {
-      id: 7,
-      name: "Lockers",
-      sector: 3,
-      objective: { kind: "collect_exit" },
-      enemies: [
-        { type: "sentry", tx: 2, ty: 1, period: 1.55 },
-        { type: "sentry", tx: 16, ty: 1, period: 1.55 },
-        { type: "pursuer", tx: 9, ty: 9, speed: 28 },
-      ],
-      lines: [
-        "####################",
-        "#S................S#",
-        "#..S............S..#",
-        "#>>.*...^^^...*.>>.#",
-        "#P..G...**...G...E.#",
-        "#>>.*...^^^...*.>>.#",
-        "#..S............S..#",
-        "#....R....H....C...#",
-        "#....Z.......H.....#",
-        "#...................#",
-        "####################",
-      ],
-    },
-    {
-      id: 8,
-      name: "Spill Tray",
-      sector: 4,
-      objective: { kind: "collect_exit" },
-      enemies: [{ type: "patrol", tx: 9, ty: 1, axis: "h", speed: 40 }],
-      lines: [
-        "####################",
-        "#S......*......S...#",
-        "#..~~~~~*~~~~~~....#",
-        "#..~....*....~.....#",
-        "#..~....P....~.....#",
-        "#..G....*....G.....#",
-        "#..~...***...~.....#",
-        "#..^...^^^...^.....#",
-        "#..S...mm....R.S....#",
-        "#S.......*.......E.#",
-        "####################",
-      ],
-    },
-    {
-      id: 9,
-      name: "Weight Class",
+      id: 5,
+      name: "Citadel Approach",
       sector: 4,
       objective: { kind: "collect_exit" },
       enemies: [
@@ -209,8 +121,8 @@
       ],
     },
     {
-      id: 10,
-      name: "Boss: Cinder",
+      id: 6,
+      name: "Cinder Core",
       sector: 4,
       objective: { kind: "boss_exit", damagePerShard: 11 },
       enemies: [{ type: "boss", tx: 10, ty: 4, hp: 99, speed: 13 }],

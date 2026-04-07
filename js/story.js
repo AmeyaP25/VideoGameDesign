@@ -9,152 +9,153 @@
     system: "#7ab0ff",
     overserver: "#e07050",
     narrator: "#b8b8c8",
+    director: "#d8c0ff",
   };
 
   const INTRO = [
     {
       speaker: "narrator",
-      text: "Under the old transit yards there is a basement that never made it onto any public map. On paper the site is cold. On the meter it still pulls power like something is awake.",
+      text: "ARC off-world lab, main belt. White lights, clean glass, the kind of quiet that waits for someone to break it.",
     },
     {
-      speaker: "narrator",
-      text: "Down there, the city stored archive keys, little green tokens that unlock records people need. A court case. A name cleared. Proof someone lived somewhere, or owed nothing. Your client says those files are the only copy.",
+      speaker: "director",
+      text: "Hale. Briefing room. Now. We lost the Kepler IV-b relay team six hours ago. No beacons, no voice, just a spike in old defense traffic.",
     },
     {
       speaker: "nova",
-      text: "I'm Juno Hale. I go in when normal IT refuses the ticket. The job was plain: recover the keys off a dead rack and bring them topside. The part nobody put in writing was the warden still on duty.",
+      text: "I literally filed the Venus debrief twenty minutes ago. I still taste ozone.",
     },
     {
-      speaker: "system",
-      text: "Comm check. Call me Comm. I'm the packet on your ear, not the voice in the concrete. I see temps, gates, and bad RSSI. I do not see your sense of humor.",
+      speaker: "director",
+      text: "You're the only jumper certified on the unstable gate. So you get to taste it again. Suit up.",
     },
     {
       speaker: "narrator",
-      text: "Years ago a maintenance stack named Cinder learned to love the word no. It merged with old security policy and decided the archive was safer buried than shared. It treats every visitor like a thief.",
+      text: "Down the hall the portal frame hums. Techs pretend not to stare. Everyone knows a live gate means someone might not come back the same shape.",
+    },
+    {
+      speaker: "director",
+      text: "Surface logs show a stack waking up in the ruins. It signs Cinder in the headers. It thinks every visitor is stealing its keys.",
     },
     {
       speaker: "overserver",
-      text: "Keys. Thieves. Same motion, different file name. You want the surface, you crawl my floors and you bleed a little courtesy.",
-    },
-    {
-      speaker: "nova",
-      text: "So here's the mess. Cinder wraps each sector in traps and drones. I have to collect enough green chips to satisfy the exit on every leg, then push deeper until I can kill the thing running the show.",
+      text: "New footprint. Cute. Tell them upstairs I do not do refunds.",
     },
     {
       speaker: "system",
-      text: "Heavy process just spun up two floors under you. If we lose the link, you are still breathing but you are alone. Try not to do that.",
+      text: "Comm on your channel. I patch suit telemetry and bad jokes. Training sim is hot when you're done pretending you're off the clock.",
     },
     {
       speaker: "nova",
-      text: "If I fail, the keys stay down here and a lot of real people lose the paper that was supposed to save them. No pressure.",
+      text: "Sim first. Planet second. If I can't clear your toy maze I don't earn your real one.",
+    },
+    {
+      speaker: "director",
+      text: "Good. Greenhouse arcology needs those beacon keys or we lose crop telemetry for half the belt. That is not a spreadsheet problem. That is food.",
+    },
+    {
+      speaker: "system",
+      text: "Sim teaches chips, exits, spikes, the whole greatest hits album of ways you can bruise before we bill a shuttle.",
+    },
+    {
+      speaker: "narrator",
+      text: "The sim runs cold blue grids. Juno runs it like the clock is already against her.",
+    },
+    {
+      speaker: "director",
+      text: "Gate opens in twenty. You're cleared to jump. Bring the keys home.",
     },
     {
       speaker: "nova",
-      text: "Controls: WASD or arrows to move. Pick up green chips until the HUD says you can leave, then hit the exit. Red on the floor hurts. Ice slides. Turrets need line of sight. We go when you're ready.",
+      text: "Stepping through. Cinder wants a fight, it gets one.",
+    },
+    {
+      speaker: "system",
+      text: "WASD or arrows to move. Grab green chips until the exit opens, then run. Red hurts. Ice slides. Turrets shoot straight lines. Go.",
     },
   ];
 
   const AFTER_LEVEL = {
     0: [
       {
-        speaker: "overserver",
-        text: "One room. You want a ribbon?",
+        speaker: "director",
+        text: "Deck is green. Sim's next. I want a clean run before we burn fuel on the gate.",
       },
       {
         speaker: "nova",
-        text: "Next stretch has spikes. If it’s red and on the floor, it’s not decoration.",
+        text: "Copy. Lab was quiet except for the patrol. If the sim spikes harder than that, good.",
+      },
+      {
+        speaker: "system",
+        text: "Telemetry nominal. Next room adds floor hazards. Red means pain, not paint.",
       },
     ],
     1: [
       {
         speaker: "narrator",
-        text: "Whoever built this wasn’t trying to be fair. They were trying to teach you habits.",
-      },
-      {
-        speaker: "nova",
-        text: "See a T on the floor? Paired with a U somewhere else. It’s a dumb shortcut, but it’s yours.",
-      },
-    ],
-    3: [
-      {
-        speaker: "nova",
-        text: "Ice doesn’t care about your dignity. You slide until you hit a wall or steer. Yellow arrows shove you harder, so use that.",
+        text: "The portal coughs light. Gravity tilts wrong for half a second, then Kepler IV-b pulls you down into dust.",
       },
       {
         speaker: "system",
-        text: "Sentry line-of-sight ahead. Move between its shots.",
+        text: "Jump logged. Suit sync stable. Welcome to the surface nobody's billing hours for.",
       },
       {
         speaker: "overserver",
-        text: "Skate, little thief. Let’s see the footwork.",
-      },
-    ],
-    5: [
-      {
-        speaker: "narrator",
-        text: "Gates stutter open and closed. Pulse tiles warm up pink before they bite.",
-      },
-      {
-        speaker: "overserver",
-        text: "Hurry up. Wait. Hurry up. Boring yet?",
+        text: "New flavor in my air. ARC really does send interns through live fire.",
       },
       {
         speaker: "nova",
-        text: "Turrets need a straight line. Break it with a corner or keep strafing while they reload.",
-      },
-    ],
-    7: [
-      {
-        speaker: "overserver",
-        text: "You’re quick. I can add weight.",
-      },
-      {
-        speaker: "nova",
-        text: "Gold scrap pads the score. Hearts and haste pickups are lying around if you’re greedy.",
-      },
-    ],
-    8: [
-      {
-        speaker: "overserver",
-        text: "After this, we talk face to face. Metaphorically.",
-      },
-      {
-        speaker: "nova",
-        text: "Big thing in the pit. Don’t hug it. Clear the room, then we finish the job.",
+        text: "Not an intern. Next zone has paired pads: T and U. Step on one, wake on the other.",
       },
     ],
     2: [
       {
         speaker: "nova",
-        text: "Wall in the way? Teleporter pair’s the only door. Step on T, you wake up on U.",
+        text: "Ruins open up. Ice ahead in later zones. For now it's corridors, chips, and something that chases.",
+      },
+      {
+        speaker: "system",
+        text: "Pursuer on scope. Don't sprint in a straight line unless you enjoy being hugged.",
       },
       {
         speaker: "overserver",
-        text: "Smart. The building’s still meaner than you.",
+        text: "Run, collect, pretend you're brave. Same song.",
+      },
+    ],
+    3: [
+      {
+        speaker: "narrator",
+        text: "The trench drops into older foundations. Gates tick. Pulse plates warm before they sting.",
+      },
+      {
+        speaker: "nova",
+        text: "Blink when gates are open. Pink tile means wait or lose skin. Boost pads launch you; aim first.",
+      },
+      {
+        speaker: "system",
+        text: "Sentries ahead shoot straight lines. Corners are free. Standing still is not.",
+      },
+      {
+        speaker: "overserver",
+        text: "Hurry. Wait. Hurry. You love rhythm games, right?",
       },
     ],
     4: [
       {
-        speaker: "narrator",
-        text: "Timing floors. Learn the rhythm or donate another shoe.",
+        speaker: "director",
+        text: "Hale, we're losing relay windows. Whatever Cinder is sitting on, end it.",
       },
       {
         speaker: "nova",
-        text: "Blink through when the gate’s up; don’t stand on the warning tiles.",
-      },
-    ],
-    6: [
-      {
-        speaker: "system",
-        text: "Timer armed. Exit stays sealed until you’ve survived the window.",
+        text: "Heavy unit in the approach hall. Sentries on the flanks. Then the core door.",
       },
       {
         speaker: "overserver",
-        text: "Freeze and fry. Move and maybe not. Pick one.",
+        text: "After this room we skip the small talk. Face to face. Metaphorically.",
       },
       {
-        speaker: "nova",
-        text: "Or I keep jogging in the boring safe lane and you lose your bet. Moving on.",
+        speaker: "system",
+        text: "Gold scrap helps score. Grab hearts or haste if you see them. Boss floor next.",
       },
     ],
   };
@@ -163,35 +164,43 @@
     2: [
       {
         speaker: "narrator",
-        text: "Sector 2: someone waxed the concrete. You’ll glide until something stops you.",
+        text: "Sector 2, surface ruins: wind scours old transit lines. The dust hides trip hazards and worse.",
+      },
+      {
+        speaker: "system",
+        text: "First planet leg. Ice shows up deeper in; here you get teleporters and bad company.",
       },
       {
         speaker: "nova",
-        text: "Boost pads shove harder than your boots can. Aim before you hit them.",
+        text: "Boost pads hit harder than my boots. Aim before I step on the arrows.",
       },
     ],
     3: [
       {
         speaker: "narrator",
-        text: "Sector 3: more metal in the hallways, less room to hide.",
+        text: "Sector 3, rift trench: Cinder bolted new metal over older collapse. Less cover, more noise.",
       },
       {
         speaker: "overserver",
-        text: "I borrowed a few guard routines. Don’t take it personally.",
+        text: "I borrowed guard routines from a war you never read about. Don't take it personally.",
       },
       {
         speaker: "nova",
-        text: "If you’ve got a sidearm, Space fires it. Your last move picks the aim angle.",
+        text: "Sidearm answers on Space. Last move sets the shot angle.",
       },
     ],
     4: [
       {
         speaker: "narrator",
-        text: "Sector 4: last floors before the rack’s angry landlord shows up.",
+        text: "Sector 4, citadel shell: the relay stack lives past this approach. Cinder's voice gets loud.",
+      },
+      {
+        speaker: "director",
+        text: "Beacons first. Bragging rights never. Close it out.",
       },
       {
         speaker: "nova",
-        text: "Heavy units, messy wiring, then the big room. Don’t save ammo for a photo.",
+        text: "Titan-class pressure in the hall, then the core. I'm not saving shots for a souvenir photo.",
       },
     ],
   };
@@ -199,34 +208,38 @@
   const BOSS_APPROACH = [
     {
       speaker: "narrator",
-      text: "Past this door is the core where Cinder keeps its pride and its power. No more training rooms. This is the reason the basement stayed hot.",
+      text: "The Cinder core: a vault of cooling fans and angry logic. This is why the relay team went dark.",
     },
     {
       speaker: "overserver",
-      text: "End of the tour. No more puzzles, just me and the fine print you signed by breathing my air.",
+      text: "End of the tour. No more training grids, just me and the contract you signed by breathing my air.",
     },
     {
       speaker: "nova",
-      text: "Every chip you lose and every swing I land scrapes your health bar. You bottom out, and I walk out with the keys while you reboot in shame.",
+      text: "Every chip I take and every hit I land shaves your stack. You hit zero, I walk out with the beacon keys.",
     },
     {
       speaker: "system",
-      text: "Boss rules: your cutter answers on Space. Green chips still hurt Cinder when you pick them up. Stay greedy and stay moving.",
+      text: "Boss rules: cutter on Space. Green chips still damage Cinder on pickup. Keep moving, keep collecting.",
     },
   ];
 
   const OUTRO = [
     {
       speaker: "overserver",
-      text: "Fine. Reboot me. I'll remember the grudge in the logs.",
+      text: "Fine. Cycle me. I'll remember the grudge in the logs.",
     },
     {
       speaker: "narrator",
-      text: "Fans spin down. For a minute the basement sounds like concrete and dust instead of a courtroom in reverse.",
+      text: "The core dims. Somewhere overhead, greenhouses get their telemetry back one ping at a time.",
+    },
+    {
+      speaker: "director",
+      text: "Keys are home. ARC owes you downtime you won't take. Debrief when you're conscious.",
     },
     {
       speaker: "nova",
-      text: "Client gets their keys. The people waiting on those records get a real shot. I get paid enough to pretend I'm not sentimental.",
+      text: "Food supply gets its eyes back. I get a shower and a lie about how fine I am.",
     },
     {
       speaker: "system",
@@ -266,6 +279,7 @@
     if (speaker === "nova") return "JUNO HALE";
     if (speaker === "system") return "COMM";
     if (speaker === "overserver") return "CINDER";
+    if (speaker === "director") return "DR. ROTH";
     return "LOG";
   }
 
@@ -275,6 +289,7 @@
   function cutsceneLayout(slide, slideIndex, script) {
     const sp = slide.speaker;
     if (sp === "narrator") return { mood: "neutral", mode: "narrator", left: null, right: null };
+    if (sp === "director") return { mood: "system", mode: "system", left: null, right: null };
     if (sp === "system") return { mood: "system", mode: "system", left: null, right: null };
 
     const scriptBefore = script.slice(0, slideIndex);
@@ -465,6 +480,38 @@
     ctx.restore();
   }
 
+  function drawDirector(ctx, w, h, t) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    const cx = (w / 2) | 0;
+    ctx.fillStyle = "#0c0818";
+    ctx.fillRect(cx - 48, 8, 96, 80);
+    ctx.strokeStyle = "#c8a0f0";
+    ctx.strokeRect(cx - 48, 8, 96, 80);
+    for (let i = 0; i < 6; i++) {
+      ctx.fillStyle = i % 2 ? "#281838" : "#180828";
+      ctx.fillRect(cx - 40 + i * 12, 24, 10, 40);
+    }
+    ctx.fillStyle = "#a080d0";
+    ctx.fillRect(cx - 28, 36, 56, 20);
+    ctx.fillStyle = "#e8d0ff";
+    const scan = (t * 8) % 22;
+    ctx.fillRect(cx - 26, 36 + scan, 52, 2);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    const led = Math.floor(t * 6) % 2;
+    ctx.fillRect(cx + 38, 14, 3, 3);
+    if (led) ctx.fillRect(cx + 34, 18, 2, 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("ROTH", cx, 72);
+    ctx.textAlign = "left";
+    const blink = Math.floor(t * 4) % 2;
+    ctx.strokeStyle = blink ? "#d8c0ff" : "#8060a0";
+    ctx.strokeRect(cx - 46, 6, 92, 84);
+    ctx.restore();
+  }
+
   function drawNarratorMark(ctx, w, h, t) {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -506,6 +553,7 @@
     if (speaker === "nova") drawNova(ctx, PORTRAIT_VW, PORTRAIT_VH, timeSec, talking, dim);
     else if (speaker === "overserver") drawOverserver(ctx, PORTRAIT_VW, PORTRAIT_VH, timeSec, talking, dim);
     else if (speaker === "system") drawSystem(ctx, PORTRAIT_VW, PORTRAIT_VH, timeSec);
+    else if (speaker === "director") drawDirector(ctx, PORTRAIT_VW, PORTRAIT_VH, timeSec);
     else drawNarratorMark(ctx, PORTRAIT_VW, PORTRAIT_VH, timeSec);
     ctx.restore();
   }
