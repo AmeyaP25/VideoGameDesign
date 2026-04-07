@@ -272,7 +272,7 @@ kbd {
   text-align: center;
   box-sizing: border-box;
   /* Sit a bit higher than dead-center so the stack breathes at the bottom */
-  transform: translateY(-3vh);
+  transform: translateY(-7vh);
 }
 
 .home-kicker {
