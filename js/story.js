@@ -5,32 +5,32 @@
   "use strict";
 
   const SPEAKER_COL = {
-    nova: "#7dffb8",
-    system: "#6a9aff",
-    overserver: "#ff5090",
-    narrator: "#c8c8e0",
+    nova: "#f0b060",
+    system: "#7ab0ff",
+    overserver: "#e07050",
+    narrator: "#b8b8c8",
   };
 
   const INTRO = [
     {
       speaker: "narrator",
-      text: "You are Nova. The city is one big computer grid, and something inside it is waking up.",
+      text: "There’s a basement under the transit yards nobody maps anymore. The lights still blink. Something’s chewing power down there.",
     },
     {
       speaker: "nova",
-      text: "I’m Nova Reyes. I move through the grid to steal back data before the wrong side locks it forever.",
+      text: "Juno Hale. Job was dumb on paper—pull “archive keys” off a dead rack. Client didn’t mention the place arguing back.",
     },
     {
       speaker: "system",
-      text: "Connection shaky. Something big is online. Be careful.",
+      text: "Comm check… link’s noisy. Heavy process just came online two floors under you.",
     },
     {
       speaker: "overserver",
-      text: "LITTLE RUNNER. I SEE YOU. TRY TO SURVIVE MY MAZE.",
+      text: "Visitor logged. Cute. Try not to scuff the tile.",
     },
     {
       speaker: "nova",
-      text: "Your job: move with the arrows or WASD. Grab the green shards, then get to the exit. I’ll handle the rest—let’s go.",
+      text: "WASD or arrows to move. Pick up the green chips, then bail through the exit when you’ve got enough. Try not to step in anything red.",
     },
   ];
 
@@ -38,103 +38,103 @@
     0: [
       {
         speaker: "overserver",
-        text: "YOU FINISHED ONE ROOM. BIG DEAL.",
+        text: "One room. You want a ribbon?",
       },
       {
         speaker: "nova",
-        text: "Baby steps. Next rooms add spikes—don’t step on the red ones.",
+        text: "Next stretch has spikes. If it’s red and on the floor, it’s not decoration.",
       },
     ],
     1: [
       {
         speaker: "narrator",
-        text: "The grid gets harder on purpose. Each floor teaches one new trick.",
+        text: "Whoever built this wasn’t trying to be fair—they were trying to teach habits.",
       },
       {
         speaker: "nova",
-        text: "Blue pads teleport you to their pair. You’ll need that when a wall blocks the hallway.",
+        text: "See a T on the floor? Paired with a U somewhere else. It’s a dumb shortcut, but it’s yours.",
       },
     ],
     3: [
       {
         speaker: "nova",
-        text: "Ice floors slide you. Tap the direction you want to go, and use the yellow boost arrows to turn.",
+        text: "Ice doesn’t care about your dignity—you slide until you hit a wall or steer. Yellow arrows shove you harder; use that.",
       },
       {
         speaker: "system",
-        text: "Cold zone ahead. Sentry ahead—move while it reloads.",
+        text: "Sentry line-of-sight ahead. Move between its shots.",
       },
       {
         speaker: "overserver",
-        text: "SLIDE. MISS THE SHOT. TRY AGAIN.",
+        text: "Skate, little thief. Let’s see the footwork.",
       },
     ],
     5: [
       {
         speaker: "narrator",
-        text: "Purple gates open and close on a timer. Pink circles warn before they zap—get out in time.",
+        text: "Gates stutter open and closed. Pulse tiles warm up pink before they bite.",
       },
       {
         speaker: "overserver",
-        text: "WAIT. RUN. WAIT. YOU ARE STILL ON MY CLOCK.",
+        text: "Hurry up. Wait. Hurry up. Boring yet?",
       },
       {
         speaker: "nova",
-        text: "Red turrets shoot in a line. Break their sight with walls, or dodge while they reload.",
+        text: "Turrets need a straight line—break it with a corner or keep strafing while they reload.",
       },
     ],
     7: [
       {
         speaker: "overserver",
-        text: "YOU ARE FAST. I WILL ADD MORE TRAPS.",
+        text: "You’re quick. I can add weight.",
       },
       {
         speaker: "nova",
-        text: "Gold scrap is bonus points. Hearts and haste boosts are on the floor when you need them.",
+        text: "Gold scrap pads the score. Hearts and haste pickups are lying around if you’re greedy.",
       },
     ],
     8: [
       {
         speaker: "overserver",
-        text: "ONE MORE MAZE BEFORE ME. DON’T GET COMFORTABLE.",
+        text: "After this, we talk face to face. Metaphorically.",
       },
       {
         speaker: "nova",
-        text: "Big enemy in the middle—give it space. Then we end this.",
+        text: "Big thing in the pit—don’t hug it. Clear the room, then we finish the job.",
       },
     ],
     2: [
       {
         speaker: "nova",
-        text: "Teleporters are the only way past that wall. Step on blue T, you pop out at blue U.",
+        text: "Wall in the way? Teleporter pair’s the only door. Step on T, you wake up on U.",
       },
       {
         speaker: "overserver",
-        text: "CLEVER. BUT THE NEXT ROOMS ADD MORE TRAPS.",
+        text: "Smart. The building’s still meaner than you.",
       },
     ],
     4: [
       {
         speaker: "narrator",
-        text: "Gates blink open and shut. Pulses flash before they shock the floor.",
+        text: "Timing floors. Learn the rhythm or donate another shoe.",
       },
       {
         speaker: "nova",
-        text: "Watch the timing. Rush in the open window—then keep moving.",
+        text: "Blink through when the gate’s up; don’t stand on the warning tiles.",
       },
     ],
     6: [
       {
         speaker: "system",
-        text: "Survival timer armed. Stay alive until the exit unlocks.",
+        text: "Timer armed. Exit stays sealed until you’ve survived the window.",
       },
       {
         speaker: "overserver",
-        text: "STAND STILL. LET THE CLOCK RUN. YOU WILL FAIL.",
+        text: "Freeze and fry. Move and maybe not. Pick one.",
       },
       {
         speaker: "nova",
-        text: "Or I move in the safe lane and waste your bet. Next.",
+        text: "Or I keep jogging in the boring safe lane and you lose your bet. Moving on.",
       },
     ],
   };
@@ -143,35 +143,35 @@
     2: [
       {
         speaker: "narrator",
-        text: "Sector 2: ice floors. You slide until you hit a wall or change direction.",
+        text: "Sector 2—someone waxed the concrete. You’ll glide until something stops you.",
       },
       {
         speaker: "nova",
-        text: "Yellow arrows give a speed kick—use them to steer on ice.",
+        text: "Boost pads shove harder than your boots can. Aim before you hit them.",
       },
     ],
     3: [
       {
         speaker: "narrator",
-        text: "Sector 3: more robots and tighter rooms.",
+        text: "Sector 3—more metal in the hallways, less room to hide.",
       },
       {
         speaker: "overserver",
-        text: "I ADDED SENTRIES AND CHASERS. LET’S SEE YOU DODGE.",
+        text: "I borrowed a few guard routines. Don’t take it personally.",
       },
       {
         speaker: "nova",
-        text: "Space bar = short ghost mode. Save it for shots or spikes.",
+        text: "If you’ve got a sidearm, Space fires it—your last move aim picks the angle.",
       },
     ],
     4: [
       {
         speaker: "narrator",
-        text: "Sector 4: last stretch before the Overserver’s core.",
+        text: "Sector 4—last floors before the rack’s angry landlord shows up.",
       },
       {
         speaker: "nova",
-        text: "Big bruisers, busy floors—then the boss. Stay sharp.",
+        text: "Heavy units, messy wiring, then the big room. Don’t save ammo for a photo.",
       },
     ],
   };
@@ -179,34 +179,34 @@
   const BOSS_APPROACH = [
     {
       speaker: "overserver",
-      text: "YOU MADE IT. FACE ME IN THE CORE. NO MORE MAZES—JUST POWER.",
+      text: "End of the tour. No more puzzles—just me and the fine print.",
     },
     {
       speaker: "nova",
-      text: "I grab the green cores to hurt you. When you fall, I run for the exit.",
+      text: "Every chip you lose and every swing I land scrapes your bar. You bottom out—I’m walking out that door.",
     },
     {
       speaker: "system",
-      text: "Boss fight. Shards damage the Overserver. Good luck.",
+      text: "Boss engagement. Chips apply damage on pickup—don’t get cute.",
     },
   ];
 
   const OUTRO = [
     {
       speaker: "overserver",
-      text: "NO… I WAS WINNING… I WILL COME BACK…",
+      text: "Fine. Reboot me. I’ll remember the grudge in the logs.",
     },
     {
       speaker: "narrator",
-      text: "The Overserver shuts down. The grid goes quiet—for now.",
+      text: "Fans spin down. For a minute the basement sounds like a basement again.",
     },
     {
       speaker: "nova",
-      text: "We bought people some time. That’s enough for today.",
+      text: "Client gets their keys. I get paid. Nobody needs a speech.",
     },
     {
       speaker: "system",
-      text: "Run complete. Disconnecting. Nice work, Nova.",
+      text: "Session closed. Juno—good hustle. Out.",
     },
   ];
 
@@ -239,10 +239,10 @@
   }
 
   function speakerLabel(speaker) {
-    if (speaker === "nova") return "NOVA REYES";
-    if (speaker === "system") return "SYSTEM";
-    if (speaker === "overserver") return "THE OVERSERVER";
-    return "NARRATION";
+    if (speaker === "nova") return "JUNO HALE";
+    if (speaker === "system") return "COMM";
+    if (speaker === "overserver") return "CINDER";
+    return "LOG";
   }
 
   /**
@@ -302,16 +302,16 @@
     ctx.fillRect(ox + 8, oy + 6, 56, 72);
     ctx.fillStyle = "#1a3040";
     ctx.fillRect(ox + 12, oy + 58, 48, 14);
-    ctx.fillStyle = "#7dffb8";
+    ctx.fillStyle = "#3a5a62";
     ctx.fillRect(ox + 14, oy + 18, 44, 44);
     ctx.fillStyle = "#1a1a28";
     ctx.fillRect(ox + 22, oy + 8, 28, 12);
     const ant = Math.round(Math.sin(t * 8) * 1);
-    ctx.fillStyle = "#00ffc8";
+    ctx.fillStyle = "#ffb040";
     ctx.fillRect(ox + 28 + ant, oy + 2, 4, 8);
     ctx.fillRect(ox + 32 + ant, oy, 2, 4);
     const jetF = Math.floor(t * 14) % 2;
-    ctx.fillStyle = jetF ? "#40ffc8" : "#208868";
+    ctx.fillStyle = jetF ? "#ff9a3c" : "#b86220";
     ctx.fillRect(ox + 20, oy + 72, 4, 3 + jetF);
     ctx.fillRect(ox + 48, oy + 72, 4, 3 + jetF);
     ctx.fillStyle = "#0a3020";
@@ -336,9 +336,9 @@
     ctx.fillRect(ox + 28, oy + 56, 16, 3);
     ctx.fillStyle = "#4a6a78";
     ctx.fillRect(ox + 6, oy + 32, 8, 28);
-    ctx.fillStyle = "#00ffc8";
+    ctx.fillStyle = "#d08030";
     ctx.fillRect(ox + 4, oy + 26, 5, 12);
-    ctx.strokeStyle = dim ? "#3a5a50" : "#00ffc8";
+    ctx.strokeStyle = dim ? "#4a5048" : "#e89840";
     ctx.lineWidth = 2;
     ctx.strokeRect(ox + 7, oy + 5, 58, 74);
     const arm = Math.round(Math.sin(t * 5) * 1);
@@ -359,18 +359,18 @@
     const oy = 8;
     const pulse = 0.5 + Math.sin(t * 4) * 0.5;
     const ringF = Math.floor(t * 3) % 3;
-    ctx.strokeStyle = `rgba(255,60,120,${0.25 + ringF * 0.12})`;
+    ctx.strokeStyle = `rgba(220,90,50,${0.28 + ringF * 0.1})`;
     ctx.lineWidth = 1;
     ctx.strokeRect(ox - 4 - ringF, oy - 4 - ringF, 88 + ringF * 2, 96 + ringF * 2);
     ctx.fillStyle = "#0a040e";
     ctx.fillRect(ox, oy, 80, 88);
-    ctx.fillStyle = `rgba(255,20,80,${0.08 + pulse * 0.12})`;
+    ctx.fillStyle = `rgba(200,60,40,${0.1 + pulse * 0.14})`;
     ctx.fillRect(ox + 4, oy + 4, 72, 80);
-    ctx.fillStyle = "#2a1038";
+    ctx.fillStyle = "#1a1018";
     ctx.fillRect(ox + 8, oy + 12, 64, 70);
-    ctx.fillStyle = "#5a2080";
+    ctx.fillStyle = "#4a2820";
     ctx.fillRect(ox + 14, oy + 18, 52, 52);
-    ctx.fillStyle = "#ff2060";
+    ctx.fillStyle = "#c84828";
     ctx.fillRect(ox + 22, oy + 26, 36, 32);
     ctx.fillStyle = "#fff8f0";
     ctx.fillRect(ox + 26, oy + 32, 12, 12);
@@ -385,13 +385,13 @@
     ctx.fillStyle = "#401020";
     if (mouthOpen) {
       ctx.fillRect(ox + 32, oy + 52, 16, 10);
-      ctx.fillStyle = "#ff5090";
+      ctx.fillStyle = "#ff7848";
       ctx.fillRect(ox + 34, oy + 56, 12, 3);
     } else ctx.fillRect(ox + 34, oy + 54, 12, 5);
     ctx.fillStyle = "#1a0a20";
     ctx.fillRect(ox + 10, oy + 8, 12, 10);
     ctx.fillRect(ox + 58, oy + 8, 12, 10);
-    ctx.strokeStyle = dim ? "#602040" : "#ff3d7f";
+    ctx.strokeStyle = dim ? "#604038" : "#e06040";
     ctx.lineWidth = 2;
     ctx.strokeRect(ox + 2, oy + 2, 76, 84);
     const glitch = (Math.floor(t * 20) % 5) * 2;
@@ -433,7 +433,7 @@
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 10px monospace";
     ctx.textAlign = "center";
-    ctx.fillText("GRID", cx, 72);
+    ctx.fillText("COMM", cx, 72);
     ctx.textAlign = "left";
     const blink = Math.floor(t * 4) % 2;
     ctx.strokeStyle = blink ? "#6a9aff" : "#4a6aaa";

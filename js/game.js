@@ -107,8 +107,6 @@
   const gameWrap = document.getElementById("wrap");
   const btnHomePlay = document.getElementById("btnHomePlay");
   const homeStartLevel = document.getElementById("homeStartLevel");
-  const homeVolMusic = document.getElementById("homeVolMusic");
-  const homeVolSfx = document.getElementById("homeVolSfx");
 
   const cutsceneEl = document.getElementById("cutscene");
   const cutsceneFx = document.getElementById("cutsceneFx");
@@ -261,11 +259,7 @@
   }
 
   function applyVolumes() {
-    const mRaw = homeVolMusic ? parseInt(homeVolMusic.value, 10) : 70;
-    const sRaw = homeVolSfx ? parseInt(homeVolSfx.value, 10) : 80;
-    const m = (Number.isFinite(mRaw) ? mRaw : 70) / 100;
-    const s = (Number.isFinite(sRaw) ? sRaw : 80) / 100;
-    A.setVolumes(m, s);
+    A.setVolumes(0.7, 0.8);
   }
 
   function resizeCutsceneFx() {
@@ -400,6 +394,11 @@
     cutsceneLine.textContent = slide.text;
     resizeCutsceneFx();
     refreshCutsceneVisuals();
+    A.resume();
+    if (window.GRPCutsceneVoice) {
+      window.GRPCutsceneVoice.cancel();
+      window.GRPCutsceneVoice.speak(slide.speaker, slide.text);
+    }
     requestAnimationFrame(() => {
       if (state !== "cutscene" || !cutsceneSlides || cutsceneIndex >= cutsceneSlides.length || !Story) return;
       const s = cutsceneSlides[cutsceneIndex];
@@ -410,6 +409,7 @@
   }
 
   function endCutscene() {
+    if (window.GRPCutsceneVoice) window.GRPCutsceneVoice.cancel();
     window.removeEventListener("resize", onCutsceneViewportResize);
     cutsceneEl.hidden = true;
     cutsceneSlides = null;
@@ -423,6 +423,7 @@
 
   function beginCutscene(slides, onDone, chapterLabel) {
     ensurePortraitContexts();
+    A.resume();
     if (!cutsceneEl || !Story || !portraitLeftCtx || !portraitRightCtx) {
       if (onDone) onDone();
       return;
@@ -431,6 +432,7 @@
       if (onDone) onDone();
       return;
     }
+    if (window.GRPCutsceneVoice) window.GRPCutsceneVoice.cancel();
     cutsceneSlides = slides;
     cutsceneIndex = 0;
     cutsceneOnDone = onDone;
@@ -447,6 +449,7 @@
 
   function advanceCutscene() {
     if (state !== "cutscene" || !cutsceneSlides) return;
+    if (window.GRPCutsceneVoice) window.GRPCutsceneVoice.cancel();
     cutsceneIndex++;
     A.playSfx("ui_confirm");
     if (cutsceneIndex >= cutsceneSlides.length) {
@@ -930,7 +933,7 @@
           popFloat(pu.x, pu.y, "HASTE", "#40d8ff");
         } else if (pu.kind === "raygun") {
           weaponMode = "raygun";
-          popFloat(pu.x, pu.y, "RAY GUN!", "#00ffc8");
+          popFloat(pu.x, pu.y, "SIDEARM", "#ffb060");
         }
       }
     }
@@ -1291,9 +1294,9 @@
         ctx.fillRect(px - 1, py - 1, pu.w + 2, pu.h + 2);
         ctx.fillStyle = "#3a5860";
         ctx.fillRect(px + 1, py + 2, 5, 3);
-        ctx.fillStyle = f ? "#ff6b9d" : "#00ffc8";
+        ctx.fillStyle = f ? "#ff8a4a" : "#ffb060";
         ctx.fillRect(px + 4, py + 1, 2, 2);
-        ctx.fillStyle = "#a0e8ff";
+        ctx.fillStyle = "#ffe8c8";
         ctx.fillRect(px + 5, py + 1, 2, 1);
       }
     }
@@ -1348,9 +1351,9 @@
         ctx.fillStyle = "#00ffc8";
         ctx.fillRect(bx + 2, by + 1, pw - 4, ph - 2);
       } else {
-        ctx.fillStyle = "rgba(0,255,200,0.35)";
+        ctx.fillStyle = "rgba(255,160,80,0.35)";
         ctx.fillRect(bx - 1, by - 1, pw + 2, ph + 2);
-        ctx.fillStyle = "#00ffc8";
+        ctx.fillStyle = "#ffb060";
         ctx.fillRect(bx, by, pw, ph);
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(bx + 1, by + 1, 2, 2);
@@ -1363,7 +1366,7 @@
       const k = Math.max(0, 0.35 - tr.t * 0.4);
       if (k <= 0) continue;
       ctx.globalAlpha = k * 0.28;
-      ctx.fillStyle = "#7dffb8";
+      ctx.fillStyle = "#5a9888";
       ctx.fillRect(tr.x | 0, tr.y | 0, PLAYER_W, PLAYER_H - 4);
     }
     ctx.globalAlpha = 1;
@@ -1723,16 +1726,16 @@
       ctx.fillRect(px + 3 + ox, py + 9 + oy, PLAYER_W - 6, 1);
     };
     const flash = invuln > 0 && Math.floor(levelTime * 12) % 2 === 0;
-    const body = flash ? "#b0ffd0" : "#7dffb8";
-    drawBody(0, 0, body, "#146050", "#0a3020");
+    const body = flash ? "#c8e0d8" : "#4a9088";
+    drawBody(0, 0, body, "#1a5048", "#0a2820");
     drawExtras(0, 0, 1, 1);
-    drawFace(0, 0, "#f5fff8", "#0a3020");
-    drawSuitDetail(0, 0, "#00ffc8", "#0a3020");
+    drawFace(0, 0, "#f2f4f0", "#0a2820");
+    drawSuitDetail(0, 0, "#e89840", "#0a2820");
     if (weaponMode === "raygun") {
       const fx = lastAimX >= 0 ? px + PLAYER_W - 2 : px - 3;
-      ctx.fillStyle = "#2a4050";
+      ctx.fillStyle = "#2a3840";
       ctx.fillRect(fx, py + 5, 4, 3);
-      ctx.fillStyle = "#00ffc8";
+      ctx.fillStyle = "#ffb050";
       ctx.fillRect(fx + (lastAimX >= 0 ? 3 : 0), py + 5, 1, 1);
     } else if (weaponMode === "boss_saber") {
       const hx = lastAimX >= 0 ? px + PLAYER_W - 1 : px - 4;
@@ -1804,9 +1807,9 @@
         const b = bossEntity();
         const cur = b && !b.dead ? Math.max(0, Math.ceil(b.hp)) : 0;
         const mx = b ? Math.ceil(b.maxHp) : 1;
-        ctx.fillText(`OVERSERVER ${cur}/${mx}`, W - 102, ORIGIN_Y + 8);
+        ctx.fillText(`CINDER ${cur}/${mx}`, W - 88, ORIGIN_Y + 8);
       } else {
-        ctx.fillText(`DATA ${shardsCollected}/${req || level.shardTotal}`, W - 72, ORIGIN_Y + 8);
+        ctx.fillText(`CHIPS ${shardsCollected}/${req || level.shardTotal}`, W - 76, ORIGIN_Y + 8);
       }
       const st = level.scrapTotal || 0;
       if (st > 0) ctx.fillText(`SCRAP ${scrapCollected}/${st}`, W - 72, ORIGIN_Y + 16);
@@ -1825,20 +1828,20 @@
 
     if (level) {
       levelLabel.textContent = level.isBoss
-        ? `FINAL CONFRONTATION · ${level.name}`
+        ? `LAST JOB · ${level.name}`
         : `LV ${level.id} ${level.name}`;
       sectorLabel.textContent = level.isBoss
-        ? "ANTAGONIST"
+        ? "CORE"
         : `SECTOR ${level.sector} OF ${SECTOR_COUNT}`;
       const o = level.objective;
       let obj = "";
-      if (o.kind === "collect_exit") obj = `Collect all ${level.shardTotal} shards, then reach exit.`;
-      else if (o.kind === "subset_exit") obj = `Collect at least ${o.min} shards, then exit.`;
+      if (o.kind === "collect_exit") obj = `Grab every green chip (${level.shardTotal}), then hit the exit.`;
+      else if (o.kind === "subset_exit") obj = `Need ${o.min} chips minimum, then get out.`;
       else if (o.kind === "survive_exit")
-        obj = `Survive ${o.seconds}s — exit unlocks. Then reach exit.`;
+        obj = `Stay alive ${o.seconds}s until the exit unlocks—then leave.`;
       else if (o.kind === "boss_exit")
-        obj = `Plasma saber (Space) and data shards both damage the Overserver. When it falls, reach the exit.`;
-      if (weaponMode === "raygun") obj += " Space: fire ray gun (aim with movement).";
+        obj = `Space: swing the cutter. Green chips also hurt Cinder on pickup. Floor them, then run for the door.`;
+      if (weaponMode === "raygun") obj += " Space: sidearm (aim with your last move).";
       objectiveLine.textContent = `Objective: ${obj}`;
     }
   }
@@ -1875,9 +1878,9 @@
     } else if (state === "interstitial") {
       const nextLv = LEVELS[levelIndex + 1];
       if (nextLv && nextLv.isBoss) {
-        panelTitle.textContent = "ANTAGONIST ENCOUNTER";
-        panelText.textContent = `Score: ${score}. Final confrontation: ${nextLv.name}.`;
-        btnStart.textContent = "Face the Overserver";
+        panelTitle.textContent = "LAST ROOM";
+        panelText.textContent = `Score ${score}. Up next: ${nextLv.name}.`;
+        btnStart.textContent = "Enter core";
       } else {
         panelTitle.textContent = `SECTOR ${level.sector} OF ${SECTOR_COUNT} — CLEAR`;
         panelText.textContent = `Score: ${score}. Next: ${nextLv ? nextLv.name : "—"}`;
@@ -1888,8 +1891,8 @@
       panelText.textContent = `Out of lives. Score: ${score}. Retry ${level.name}?`;
       btnStart.textContent = "Retry Level";
     } else if (state === "winall") {
-      panelTitle.textContent = "SHARD CIRCUIT — YOU WIN";
-      panelText.textContent = `You beat the Overserver. Final score: ${score}.`;
+      panelTitle.textContent = "SHARD CIRCUIT — CLEAR";
+      panelText.textContent = `Cinder’s down. Final score: ${score}.`;
       btnStart.textContent = "Play Again";
     }
     btnStart.focus();
@@ -1985,7 +1988,7 @@
       if (Story && nextLv) {
         if (nextLv.isBoss && typeof Story.getBossApproach === "function") {
           midSlides = Story.getBossApproach();
-          chapter = "FINAL FIGHT";
+          chapter = "CORE";
         } else if (typeof Story.getSectorIntro === "function") {
           midSlides = Story.getSectorIntro(nextLv.sector, completedSector);
           if (midSlides && midSlides.length) chapter = `SECTOR ${nextLv.sector}`;
@@ -2016,9 +2019,6 @@
     }
   });
 
-  if (homeVolMusic) homeVolMusic.addEventListener("input", applyVolumes);
-  if (homeVolSfx) homeVolSfx.addEventListener("input", applyVolumes);
-
   if (btnCutsceneNext) {
     btnCutsceneNext.addEventListener("click", () => {
       if (state === "cutscene") advanceCutscene();
@@ -2033,6 +2033,7 @@
     btnHomePlay.addEventListener("click", () => {
       A.resume();
       syncVolFromHome();
+      if (window.GRPCutsceneVoice) window.GRPCutsceneVoice.getVoices();
       A.playSfx("ui_confirm");
       if (Home) Home.stop();
       showPlayingLayout();
@@ -2059,7 +2060,7 @@
       if (startIdx === 0 && Story && typeof Story.getIntro === "function") {
         const intro = Story.getIntro();
         if (intro && intro.length > 0) {
-          beginCutscene(intro, beginPlay, "PROLOGUE");
+          beginCutscene(intro, beginPlay, "OPENING");
           return;
         }
       }

@@ -15,6 +15,9 @@
   let musicMode = "off";
   let sectorTag = "s1";
   let pausedMusic = false;
+  /** Last UI volume 0–1 (no sliders — fixed defaults, still correct after pause). */
+  let lastMusic01 = 0.7;
+  let lastSfx01 = 0.8;
   let stepIndex = 0;
   let nextNoteTime = 0;
   let activeOscs = [];
@@ -55,8 +58,10 @@
   }
 
   function setVolumes(music01, sfx01) {
-    if (musicGain) musicGain.gain.value = Math.max(0, Math.min(1, music01)) * 0.4;
-    if (sfxGain) sfxGain.gain.value = Math.max(0, Math.min(1, sfx01)) * 0.65;
+    lastMusic01 = Math.max(0, Math.min(1, music01));
+    lastSfx01 = Math.max(0, Math.min(1, sfx01));
+    if (musicGain) musicGain.gain.value = lastMusic01 * 0.4;
+    if (sfxGain) sfxGain.gain.value = lastSfx01 * 0.65;
   }
 
   function stopScheduledMusic() {
@@ -206,8 +211,7 @@
       musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
       musicGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
     } else if (!p && ctx && musicMode !== "off") {
-      const v = parseFloat(document.getElementById("homeVolMusic")?.value ?? "70") / 100;
-      musicGain.gain.linearRampToValueAtTime(v * 0.4, ctx.currentTime + 0.12);
+      musicGain.gain.linearRampToValueAtTime(lastMusic01 * 0.4, ctx.currentTime + 0.12);
     }
   }
 

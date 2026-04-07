@@ -1,7 +1,7 @@
 /**
  * Shard Circuit — 10 stages, easy → hard, boss finale. 20×11 ASCII maps.
  * # wall  . empty  m mud  ^ spike  G gate  ~ ice  > boost
- * S shard  E exit  P spawn  * pulse  T/U teleporter (paired in order)  C scrap  H Z powerups  R raygun
+ * S chip  E exit  P spawn  * pulse  T/U teleporter (paired in order)  C scrap  H Z powerups  R sidearm
  */
 (function () {
   "use strict";
@@ -12,7 +12,7 @@
   const RAW_LEVELS = [
     {
       id: 1,
-      name: "First Steps",
+      name: "Sub Basement",
       sector: 1,
       objective: { kind: "collect_exit" },
       enemies: [{ type: "patrol", tx: 10, ty: 8, axis: "h", speed: 20 }],
@@ -32,7 +32,7 @@
     },
     {
       id: 2,
-      name: "Spike Lanes",
+      name: "Needle Row",
       sector: 1,
       objective: { kind: "collect_exit" },
       enemies: [{ type: "patrol", tx: 9, ty: 5, axis: "v", speed: 24 }],
@@ -52,7 +52,7 @@
     },
     {
       id: 3,
-      name: "Split Room (Teleporter)",
+      name: "Two Doors",
       sector: 1,
       objective: { kind: "collect_exit" },
       enemies: [
@@ -75,7 +75,7 @@
     },
     {
       id: 4,
-      name: "Ice Run",
+      name: "Cold Storage",
       sector: 2,
       objective: { kind: "subset_exit", min: 5 },
       enemies: [{ type: "sentry", tx: 9, ty: 0, period: 2.2 }],
@@ -95,7 +95,7 @@
     },
     {
       id: 5,
-      name: "Gates & Pulses",
+      name: "Strobe Hall",
       sector: 2,
       objective: { kind: "collect_exit" },
       enemies: [
@@ -118,7 +118,7 @@
     },
     {
       id: 6,
-      name: "Hold Still",
+      name: "Holdout",
       sector: 3,
       objective: { kind: "survive_exit", seconds: 16 },
       enemies: [
@@ -142,7 +142,7 @@
     },
     {
       id: 7,
-      name: "Vault Hall",
+      name: "Lockers",
       sector: 3,
       objective: { kind: "collect_exit" },
       enemies: [
@@ -166,7 +166,7 @@
     },
     {
       id: 8,
-      name: "Hazard Mix",
+      name: "Spill Tray",
       sector: 4,
       objective: { kind: "collect_exit" },
       enemies: [{ type: "patrol", tx: 9, ty: 1, axis: "h", speed: 40 }],
@@ -186,7 +186,7 @@
     },
     {
       id: 9,
-      name: "Titan Pit",
+      name: "Weight Class",
       sector: 4,
       objective: { kind: "collect_exit" },
       enemies: [
@@ -210,7 +210,7 @@
     },
     {
       id: 10,
-      name: "Boss: Overserver",
+      name: "Boss: Cinder",
       sector: 4,
       objective: { kind: "boss_exit", damagePerShard: 11 },
       enemies: [{ type: "boss", tx: 10, ty: 4, hp: 99, speed: 13 }],

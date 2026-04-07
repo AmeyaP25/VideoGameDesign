@@ -104,6 +104,136 @@
     raf = requestAnimationFrame(frame);
   }
 
+  function initLevelPicker() {
+    const select = document.getElementById("homeStartLevel");
+    const picker = document.getElementById("homeLevelPicker");
+    if (!select || !picker) return;
+    const trigger = document.getElementById("homeLevelTrigger");
+    const dropdown = document.getElementById("homeLevelDropdown");
+    const numEl = document.getElementById("homeLevelNum");
+    const nameEl = document.getElementById("homeLevelName");
+    if (!trigger || !dropdown || !numEl || !nameEl) return;
+
+    function optionButtons() {
+      return Array.from(dropdown.querySelectorAll(".home-level-option"));
+    }
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function parseOptionText(text) {
+      const m = text.trim().match(/^(\d+)\s*[—-]\s*(.+)$/);
+      return m ? { num: pad(m[1]), name: m[2] } : { num: pad(select.value), name: text.trim() };
+    }
+
+    function syncTrigger() {
+      const opt = select.options[select.selectedIndex];
+      const { num, name } = parseOptionText(opt.textContent);
+      numEl.textContent = num;
+      nameEl.textContent = name;
+      optionButtons().forEach((btn) => {
+        const sel = btn.dataset.value === select.value;
+        btn.classList.toggle("is-selected", sel);
+        btn.setAttribute("aria-selected", sel ? "true" : "false");
+      });
+    }
+
+    function openQ() {
+      return !dropdown.hidden;
+    }
+
+    function setOpen(open) {
+      picker.classList.toggle("is-open", open);
+      dropdown.hidden = !open;
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        const cur = optionButtons().find((b) => b.dataset.value === select.value) || optionButtons()[0];
+        if (cur) cur.focus();
+      } else {
+        trigger.focus();
+      }
+    }
+
+    function chooseValue(val) {
+      select.value = val;
+      syncTrigger();
+      setOpen(false);
+    }
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(!openQ());
+    });
+
+    optionButtons().forEach((btn) => {
+      btn.addEventListener("click", () => chooseValue(btn.dataset.value));
+    });
+
+    document.addEventListener("mousedown", (e) => {
+      if (!openQ()) return;
+      if (!picker.contains(e.target)) setOpen(false);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && openQ()) {
+        e.preventDefault();
+        setOpen(false);
+      }
+    });
+
+    trigger.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        setOpen(!openQ());
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!openQ()) setOpen(true);
+      } else if (e.key === "Escape" && openQ()) {
+        e.preventDefault();
+        setOpen(false);
+      }
+    });
+
+    dropdown.addEventListener("keydown", (e) => {
+      const opts = optionButtons();
+      const i = opts.indexOf(document.activeElement);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = Math.min(opts.length - 1, i < 0 ? 0 : i + 1);
+        opts[next].focus();
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const next = Math.max(0, i <= 0 ? 0 : i - 1);
+        opts[next].focus();
+      }
+      if (e.key === "Home") {
+        e.preventDefault();
+        opts[0].focus();
+      }
+      if (e.key === "End") {
+        e.preventDefault();
+        opts[opts.length - 1].focus();
+      }
+      if (e.key === "Enter" || e.key === " ") {
+        if (i >= 0) {
+          e.preventDefault();
+          chooseValue(opts[i].dataset.value);
+        }
+      }
+    });
+
+    syncTrigger();
+  }
+
+  initLevelPicker();
+
   window.GRPHome = {
     start() {
       running = true;
