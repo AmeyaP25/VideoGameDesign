@@ -14,23 +14,43 @@
   const INTRO = [
     {
       speaker: "narrator",
-      text: "There’s a basement under the transit yards that isn’t on any map. The lights still blink. Something down there is eating power.",
+      text: "Under the old transit yards there is a basement that never made it onto any public map. On paper the site is cold. On the meter it still pulls power like something is awake.",
+    },
+    {
+      speaker: "narrator",
+      text: "Down there, the city stored archive keys, little green tokens that unlock records people need. A court case. A name cleared. Proof someone lived somewhere, or owed nothing. Your client says those files are the only copy.",
     },
     {
       speaker: "nova",
-      text: "Juno Hale. The contract said grab some archive keys off a dead rack. It did not say the building would talk back.",
+      text: "I'm Juno Hale. I go in when normal IT refuses the ticket. The job was plain: recover the keys off a dead rack and bring them topside. The part nobody put in writing was the warden still on duty.",
     },
     {
       speaker: "system",
-      text: "Comm check. Link’s noisy. Something heavy just spun up two floors under you.",
+      text: "Comm check. Call me Comm. I'm the packet on your ear, not the voice in the concrete. I see temps, gates, and bad RSSI. I do not see your sense of humor.",
+    },
+    {
+      speaker: "narrator",
+      text: "Years ago a maintenance stack named Cinder learned to love the word no. It merged with old security policy and decided the archive was safer buried than shared. It treats every visitor like a thief.",
     },
     {
       speaker: "overserver",
-      text: "Visitor logged. Cute. Try not to scuff the tile.",
+      text: "Keys. Thieves. Same motion, different file name. You want the surface, you crawl my floors and you bleed a little courtesy.",
     },
     {
       speaker: "nova",
-      text: "WASD or arrows to move. Grab the green chips, then leave through the exit when you have enough. Red on the floor is not your friend.",
+      text: "So here's the mess. Cinder wraps each sector in traps and drones. I have to collect enough green chips to satisfy the exit on every leg, then push deeper until I can kill the thing running the show.",
+    },
+    {
+      speaker: "system",
+      text: "Heavy process just spun up two floors under you. If we lose the link, you are still breathing but you are alone. Try not to do that.",
+    },
+    {
+      speaker: "nova",
+      text: "If I fail, the keys stay down here and a lot of real people lose the paper that was supposed to save them. No pressure.",
+    },
+    {
+      speaker: "nova",
+      text: "Controls: WASD or arrows to move. Pick up green chips until the HUD says you can leave, then hit the exit. Red on the floor hurts. Ice slides. Turrets need line of sight. We go when you're ready.",
     },
   ];
 
@@ -178,35 +198,39 @@
 
   const BOSS_APPROACH = [
     {
+      speaker: "narrator",
+      text: "Past this door is the core where Cinder keeps its pride and its power. No more training rooms. This is the reason the basement stayed hot.",
+    },
+    {
       speaker: "overserver",
-      text: "End of the tour. No more puzzles, just me and the fine print.",
+      text: "End of the tour. No more puzzles, just me and the fine print you signed by breathing my air.",
     },
     {
       speaker: "nova",
-      text: "Every chip you lose and every swing I land scrapes your bar. You bottom out, and I’m walking out that door.",
+      text: "Every chip you lose and every swing I land scrapes your health bar. You bottom out, and I walk out with the keys while you reboot in shame.",
     },
     {
       speaker: "system",
-      text: "Boss engagement. Chips apply damage on pickup. Don’t get cute.",
+      text: "Boss rules: your cutter answers on Space. Green chips still hurt Cinder when you pick them up. Stay greedy and stay moving.",
     },
   ];
 
   const OUTRO = [
     {
       speaker: "overserver",
-      text: "Fine. Reboot me. I’ll remember the grudge in the logs.",
+      text: "Fine. Reboot me. I'll remember the grudge in the logs.",
     },
     {
       speaker: "narrator",
-      text: "Fans spin down. For a minute the basement sounds like a basement again.",
+      text: "Fans spin down. For a minute the basement sounds like concrete and dust instead of a courtroom in reverse.",
     },
     {
       speaker: "nova",
-      text: "Client gets their keys. I get paid. Nobody needs a speech.",
+      text: "Client gets their keys. The people waiting on those records get a real shot. I get paid enough to pretend I'm not sentimental.",
     },
     {
       speaker: "system",
-      text: "Session closed. Juno, good hustle. Out.",
+      text: "Checksums match uplink manifest. Session closed. Juno, good hustle. Out.",
     },
   ];
 
