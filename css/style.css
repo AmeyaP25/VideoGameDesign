@@ -271,6 +271,8 @@ kbd {
   margin: 0;
   text-align: center;
   box-sizing: border-box;
+  /* Sit a bit higher than dead-center so the stack breathes at the bottom */
+  transform: translateY(-3vh);
 }
 
 .home-kicker {
