@@ -1,5 +1,5 @@
 /**
- * Shard Circuit — tile-based levels, objectives, procedural audio via GRPAudio.
+ * Shard Circuit: tile-based levels, objectives, procedural audio via GRPAudio.
  */
 (function () {
   "use strict";
@@ -1823,7 +1823,7 @@
     comboLabel.textContent = `COMBO x${combo}`;
     if (level && (level.scrapTotal || 0) > 0)
       scrapLabel.textContent = `SCRAP ${scrapCollected}/${level.scrapTotal}`;
-    else scrapLabel.textContent = "SCRAP —";
+    else scrapLabel.textContent = "SCRAP none";
     livesLabel.textContent = `LIVES ${lives}`;
 
     if (level) {
@@ -1835,13 +1835,13 @@
         : `SECTOR ${level.sector} OF ${SECTOR_COUNT}`;
       const o = level.objective;
       let obj = "";
-      if (o.kind === "collect_exit") obj = `Grab every green chip (${level.shardTotal}), then hit the exit.`;
-      else if (o.kind === "subset_exit") obj = `Need ${o.min} chips minimum, then get out.`;
+      if (o.kind === "collect_exit") obj = `Pick up all ${level.shardTotal} green chips, then reach the exit.`;
+      else if (o.kind === "subset_exit") obj = `You need at least ${o.min} chips before you can leave.`;
       else if (o.kind === "survive_exit")
-        obj = `Stay alive ${o.seconds}s until the exit unlocks—then leave.`;
+        obj = `Stay alive ${o.seconds}s until the exit unlocks, then leave.`;
       else if (o.kind === "boss_exit")
-        obj = `Space: swing the cutter. Green chips also hurt Cinder on pickup. Floor them, then run for the door.`;
-      if (weaponMode === "raygun") obj += " Space: sidearm (aim with your last move).";
+        obj = `Space swings the cutter. Every green chip you grab takes a bite out of Cinder. When Cinder falls, head for the door.`;
+      if (weaponMode === "raygun") obj += " Space fires the sidearm (aim follows your last move).";
       objectiveLine.textContent = `Objective: ${obj}`;
     }
   }
@@ -1882,8 +1882,8 @@
         panelText.textContent = `Score ${score}. Up next: ${nextLv.name}.`;
         btnStart.textContent = "Enter core";
       } else {
-        panelTitle.textContent = `SECTOR ${level.sector} OF ${SECTOR_COUNT} — CLEAR`;
-        panelText.textContent = `Score: ${score}. Next: ${nextLv ? nextLv.name : "—"}`;
+        panelTitle.textContent = `SECTOR ${level.sector} OF ${SECTOR_COUNT} CLEAR`;
+        panelText.textContent = `Score: ${score}. Next: ${nextLv ? nextLv.name : "n/a"}`;
         btnStart.textContent = "Next Level";
       }
     } else if (state === "gameover") {
@@ -1891,7 +1891,7 @@
       panelText.textContent = `Out of lives. Score: ${score}. Retry ${level.name}?`;
       btnStart.textContent = "Retry Level";
     } else if (state === "winall") {
-      panelTitle.textContent = "SHARD CIRCUIT — CLEAR";
+      panelTitle.textContent = "SHARD CIRCUIT CLEAR";
       panelText.textContent = `Cinder’s down. Final score: ${score}.`;
       btnStart.textContent = "Play Again";
     }
@@ -2075,6 +2075,15 @@
   A.resume();
   applyVolumes();
   if (Home) Home.start();
+
+  if (homeScreen) {
+    const unlockTitleAudio = () => {
+      A.resume();
+      if (state === "title") A.startTitleMusic();
+    };
+    homeScreen.addEventListener("pointerdown", unlockTitleAudio, { once: true, passive: true });
+    homeScreen.addEventListener("keydown", unlockTitleAudio, { once: true });
+  }
 
   requestAnimationFrame(loop);
 })();

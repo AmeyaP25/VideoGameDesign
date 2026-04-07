@@ -15,17 +15,17 @@
     <div class="home-ui">
       <p class="home-kicker">TSA · original arcade crawl</p>
       <h1 class="home-title"><span class="home-title-line">SHARD</span> <span class="home-title-accent">CIRCUIT</span></h1>
-      <p class="home-tagline">Juno Hale, hired muscle for boring jobs. This basement wants its chips back—grab the greens, dodge the junk, shut down Cinder in the core.</p>
+      <p class="home-tagline">You’re Juno Hale, the person they call when a job sounds boring until it isn’t. This basement still wants its chips back, so grab the greens, dodge the mess, and put Cinder down in the core.</p>
 
       <section class="home-howto" aria-labelledby="howtoHeading">
         <h2 id="howtoHeading">How to play</h2>
         <ul class="home-howto-list">
-          <li><kbd>Arrows</kbd> or <kbd>WASD</kbd> — move</li>
-          <li><kbd>Space</kbd> — shoot the <strong>sidearm</strong> or swing the boss <strong>cutter</strong> when you’ve got one</li>
-          <li><kbd>P</kbd> / <kbd>Esc</kbd> — pause</li>
-          <li><strong>Chips</strong> — meet the count on the HUD, then hit the <strong>exit</strong></li>
+          <li><kbd>Arrows</kbd> or <kbd>WASD</kbd> to move.</li>
+          <li><kbd>Space</kbd> fires the <strong>sidearm</strong> or swings the boss <strong>cutter</strong> if you’re holding one.</li>
+          <li><kbd>P</kbd> or <kbd>Esc</kbd> pauses.</li>
+          <li>Grab enough <strong>chips</strong> (check the HUD), then run for the <strong>exit</strong>.</li>
           <li><strong>Ice</strong> slides · <strong>&gt;</strong> shove pads · <strong>T/U</strong> teleporters · <strong>C</strong> scrap · <strong>H</strong> extra life · <strong>Z</strong> speed · <strong>R</strong> sidearm pickup</li>
-          <li><strong>Sentries</strong> shoot straight lines—use walls or strafe between shots</li>
+          <li><strong>Sentries</strong> shoot in straight lines, so break line of sight or keep moving.</li>
         </ul>
       </section>
 
@@ -33,16 +33,16 @@
         <span id="homeLevelLabel" class="home-level-select">Start stage</span>
         <div class="home-level-picker" id="homeLevelPicker">
           <select id="homeStartLevel" class="home-start-level-sr" tabindex="-1" aria-hidden="true">
-            <option value="1" selected>1 — Sub Basement</option>
-            <option value="2">2 — Needle Row</option>
-            <option value="3">3 — Two Doors</option>
-            <option value="4">4 — Cold Storage</option>
-            <option value="5">5 — Strobe Hall</option>
-            <option value="6">6 — Holdout</option>
-            <option value="7">7 — Lockers</option>
-            <option value="8">8 — Spill Tray</option>
-            <option value="9">9 — Weight Class</option>
-            <option value="10">10 — Boss: Cinder</option>
+            <option value="1" selected>1 - Sub Basement</option>
+            <option value="2">2 - Needle Row</option>
+            <option value="3">3 - Two Doors</option>
+            <option value="4">4 - Cold Storage</option>
+            <option value="5">5 - Strobe Hall</option>
+            <option value="6">6 - Holdout</option>
+            <option value="7">7 - Lockers</option>
+            <option value="8">8 - Spill Tray</option>
+            <option value="9">9 - Weight Class</option>
+            <option value="10">10 - Boss: Cinder</option>
           </select>
           <button
             type="button"
@@ -110,8 +110,8 @@
   <div id="wrap" class="game-wrap" hidden>
     <header class="hud-top">
       <div class="hud-left">
-        <span id="levelLabel">LEVEL —</span>
-        <span id="sectorLabel">SECTOR —</span>
+        <span id="levelLabel">LEVEL …</span>
+        <span id="sectorLabel">SECTOR …</span>
       </div>
       <div class="hud-center">
         <span id="scoreLabel">SCORE 0</span>
@@ -123,8 +123,8 @@
     <div class="game-stage">
       <canvas id="game" width="320" height="180" tabindex="0" aria-label="Game canvas"></canvas>
     </div>
-    <p id="objectiveLine" class="objective-bar">Objective: —</p>
-    <footer class="hud-foot">Shard Circuit — TSA entry</footer>
+    <p id="objectiveLine" class="objective-bar">Objective: …</p>
+    <footer class="hud-foot">Shard Circuit · TSA entry</footer>
   </div>
 
   <div id="cutscene" class="cutscene-cinematic" hidden aria-live="polite">
@@ -152,10 +152,10 @@
   <div id="overlay" class="overlay" hidden>
     <div class="panel">
       <h1 id="panelTitle">SHARD CIRCUIT</h1>
-      <p id="panelText" class="sub">Move, grab chips, don’t die, hit the exit.</p>
+      <p id="panelText" class="sub">Move, grab chips, try not to die, get to the exit.</p>
       <p class="controls" id="panelControls">
         Move: <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>WASD</kbd><br />
-        <kbd>Space</kbd> — sidearm / cutter when armed · Pause: <kbd>P</kbd> or <kbd>Esc</kbd>
+        <kbd>Space</kbd>: sidearm or cutter when armed. Pause: <kbd>P</kbd> or <kbd>Esc</kbd>.
       </p>
       <button type="button" id="btnStart">Continue</button>
     </div>

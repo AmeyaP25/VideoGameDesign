@@ -1,5 +1,5 @@
 /**
- * Shard Circuit — 10 stages, easy → hard, boss finale. 20×11 ASCII maps.
+ * Shard Circuit: 10 stages, easy to hard, boss finale. 20x11 ASCII maps.
  * # wall  . empty  m mud  ^ spike  G gate  ~ ice  > boost
  * S chip  E exit  P spawn  * pulse  T/U teleporter (paired in order)  C scrap  H Z powerups  R sidearm
  */

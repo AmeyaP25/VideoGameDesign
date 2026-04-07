@@ -1,5 +1,5 @@
 /**
- * Title screen — full-viewport animated cyber grid + drift particles.
+ * Title screen: full-viewport animated cyber grid + drift particles.
  */
 (function () {
   "use strict";
@@ -123,7 +123,7 @@
     }
 
     function parseOptionText(text) {
-      const m = text.trim().match(/^(\d+)\s*[—-]\s*(.+)$/);
+      const m = text.trim().match(/^(\d+)\s*-\s*(.+)$/);
       return m ? { num: pad(m[1]), name: m[2] } : { num: pad(select.value), name: text.trim() };
     }
 

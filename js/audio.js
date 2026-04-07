@@ -1,5 +1,5 @@
 /**
- * Shard Circuit — procedural Web Audio (BGM + SFX). Original, copyright-safe.
+ * Shard Circuit: procedural Web Audio (BGM + SFX). Works on HTTPS (e.g. Vercel) after a user gesture.
  * Global: window.GRPAudio
  */
 (function () {
@@ -15,7 +15,7 @@
   let musicMode = "off";
   let sectorTag = "s1";
   let pausedMusic = false;
-  /** Last UI volume 0–1 (no sliders — fixed defaults, still correct after pause). */
+  /** Last UI volume 0 to 1 (no sliders; fixed defaults, still correct after pause). */
   let lastMusic01 = 0.7;
   let lastSfx01 = 0.8;
   let stepIndex = 0;
@@ -53,7 +53,10 @@
 
   function resume() {
     const c = ensureCtx();
-    if (c && c.state === "suspended") c.resume();
+    if (c && c.state === "suspended") {
+      const p = c.resume();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    }
     return c;
   }
 

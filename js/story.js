@@ -1,5 +1,5 @@
 /**
- * Shard Circuit — narrative, cinematic layouts, animated portraits.
+ * Shard Circuit: narrative, cinematic layouts, animated portraits.
  */
 (function () {
   "use strict";
@@ -14,15 +14,15 @@
   const INTRO = [
     {
       speaker: "narrator",
-      text: "There’s a basement under the transit yards nobody maps anymore. The lights still blink. Something’s chewing power down there.",
+      text: "There’s a basement under the transit yards that isn’t on any map. The lights still blink. Something down there is eating power.",
     },
     {
       speaker: "nova",
-      text: "Juno Hale. Job was dumb on paper—pull “archive keys” off a dead rack. Client didn’t mention the place arguing back.",
+      text: "Juno Hale. The contract said grab some archive keys off a dead rack. It did not say the building would talk back.",
     },
     {
       speaker: "system",
-      text: "Comm check… link’s noisy. Heavy process just came online two floors under you.",
+      text: "Comm check. Link’s noisy. Something heavy just spun up two floors under you.",
     },
     {
       speaker: "overserver",
@@ -30,7 +30,7 @@
     },
     {
       speaker: "nova",
-      text: "WASD or arrows to move. Pick up the green chips, then bail through the exit when you’ve got enough. Try not to step in anything red.",
+      text: "WASD or arrows to move. Grab the green chips, then leave through the exit when you have enough. Red on the floor is not your friend.",
     },
   ];
 
@@ -48,7 +48,7 @@
     1: [
       {
         speaker: "narrator",
-        text: "Whoever built this wasn’t trying to be fair—they were trying to teach habits.",
+        text: "Whoever built this wasn’t trying to be fair. They were trying to teach you habits.",
       },
       {
         speaker: "nova",
@@ -58,7 +58,7 @@
     3: [
       {
         speaker: "nova",
-        text: "Ice doesn’t care about your dignity—you slide until you hit a wall or steer. Yellow arrows shove you harder; use that.",
+        text: "Ice doesn’t care about your dignity. You slide until you hit a wall or steer. Yellow arrows shove you harder, so use that.",
       },
       {
         speaker: "system",
@@ -80,7 +80,7 @@
       },
       {
         speaker: "nova",
-        text: "Turrets need a straight line—break it with a corner or keep strafing while they reload.",
+        text: "Turrets need a straight line. Break it with a corner or keep strafing while they reload.",
       },
     ],
     7: [
@@ -100,7 +100,7 @@
       },
       {
         speaker: "nova",
-        text: "Big thing in the pit—don’t hug it. Clear the room, then we finish the job.",
+        text: "Big thing in the pit. Don’t hug it. Clear the room, then we finish the job.",
       },
     ],
     2: [
@@ -143,7 +143,7 @@
     2: [
       {
         speaker: "narrator",
-        text: "Sector 2—someone waxed the concrete. You’ll glide until something stops you.",
+        text: "Sector 2: someone waxed the concrete. You’ll glide until something stops you.",
       },
       {
         speaker: "nova",
@@ -153,7 +153,7 @@
     3: [
       {
         speaker: "narrator",
-        text: "Sector 3—more metal in the hallways, less room to hide.",
+        text: "Sector 3: more metal in the hallways, less room to hide.",
       },
       {
         speaker: "overserver",
@@ -161,13 +161,13 @@
       },
       {
         speaker: "nova",
-        text: "If you’ve got a sidearm, Space fires it—your last move aim picks the angle.",
+        text: "If you’ve got a sidearm, Space fires it. Your last move picks the aim angle.",
       },
     ],
     4: [
       {
         speaker: "narrator",
-        text: "Sector 4—last floors before the rack’s angry landlord shows up.",
+        text: "Sector 4: last floors before the rack’s angry landlord shows up.",
       },
       {
         speaker: "nova",
@@ -179,15 +179,15 @@
   const BOSS_APPROACH = [
     {
       speaker: "overserver",
-      text: "End of the tour. No more puzzles—just me and the fine print.",
+      text: "End of the tour. No more puzzles, just me and the fine print.",
     },
     {
       speaker: "nova",
-      text: "Every chip you lose and every swing I land scrapes your bar. You bottom out—I’m walking out that door.",
+      text: "Every chip you lose and every swing I land scrapes your bar. You bottom out, and I’m walking out that door.",
     },
     {
       speaker: "system",
-      text: "Boss engagement. Chips apply damage on pickup—don’t get cute.",
+      text: "Boss engagement. Chips apply damage on pickup. Don’t get cute.",
     },
   ];
 
@@ -206,7 +206,7 @@
     },
     {
       speaker: "system",
-      text: "Session closed. Juno—good hustle. Out.",
+      text: "Session closed. Juno, good hustle. Out.",
     },
   ];
 

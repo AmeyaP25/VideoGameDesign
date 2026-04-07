@@ -237,7 +237,7 @@ kbd {
   outline-offset: 3px;
 }
 
-/* —— Title / home screen —— */
+/* Title / home screen */
 .home-screen {
   position: fixed;
   inset: 0;
@@ -367,7 +367,7 @@ kbd {
   text-shadow: 0 0 16px rgba(0, 255, 200, 0.22);
 }
 
-/* Hidden native select — game.js reads #homeStartLevel */
+/* Hidden native select; game.js reads #homeStartLevel */
 .home-start-level-sr {
   position: absolute;
   width: 1px;
@@ -643,7 +643,7 @@ kbd {
   display: none !important;
 }
 
-/* —— Cinematic cutscenes —— */
+/* Cinematic cutscenes */
 .cutscene-cinematic {
   position: fixed;
   inset: 0;
