@@ -1,0 +1,17 @@
+---
+description: After editing this project, commit and push to GitHub
+alwaysApply: true
+---
+
+# Git: commit and push after changes
+
+For **Shard Circuit / VideoGameDesign** (`tsa-retro-revival-game`):
+
+1. After you finish **any** code or asset change the user asked for, run from the project root:
+   - `git add` the relevant files (or `-A` if appropriate)
+   - `git commit -m "…"` with a short, clear message
+   - `git push origin main`
+2. Do **not** leave fixes only in the working tree when the user expects the repo updated.
+3. If there is nothing to commit, say so instead of pushing an empty commit.
+
+Remote: `https://github.com/AmeyaP25/VideoGameDesign` (branch `main`).
