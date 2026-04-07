@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Shard Circuit</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="homeScreen" class="home-screen">
+    <canvas id="homeCanvas" aria-hidden="true"></canvas>
+    <div class="home-ui">
+      <p class="home-kicker">Original game</p>
+      <h1 class="home-title"><span class="home-title-line">SHARD</span> <span class="home-title-accent">CIRCUIT</span></h1>
+      <p class="home-tagline">You are Nova. Grab the green shards, dodge traps, beat the Overserver at the end.</p>
+
+      <section class="home-howto" aria-labelledby="howtoHeading">
+        <h2 id="howtoHeading">How to play</h2>
+        <ul class="home-howto-list">
+          <li><kbd>Arrows</kbd> or <kbd>WASD</kbd> — move</li>
+          <li><kbd>Space</kbd> — fire when you have a <strong>ray gun</strong> or the boss <strong>plasma saber</strong></li>
+          <li><kbd>P</kbd> / <kbd>Esc</kbd> — pause</li>
+          <li><strong>Shards</strong> — collect per objective, then reach the <strong>exit</strong></li>
+          <li><strong>Ice</strong> slides · <strong>&gt;</strong> boosts · <strong>T/U</strong> teleporters · <strong>C</strong> scrap · <strong>H</strong> life · <strong>Z</strong> haste · <strong>R</strong> ray gun pickup</li>
+          <li><strong>Sentries</strong> shoot — hide behind walls or keep moving</li>
+        </ul>
+      </section>
+
+      <div class="home-start-row">
+        <label class="home-level-select" for="homeStartLevel">Start at level</label>
+        <select id="homeStartLevel" class="home-start-level" aria-label="Starting level">
+          <option value="1" selected>1 — First Steps</option>
+          <option value="2">2 — Spike Lanes</option>
+          <option value="3">3 — Split Room</option>
+          <option value="4">4 — Ice Run</option>
+          <option value="5">5 — Gates &amp; Pulses</option>
+          <option value="6">6 — Hold Still</option>
+          <option value="7">7 — Vault Hall</option>
+          <option value="8">8 — Hazard Mix</option>
+          <option value="9">9 — Titan Pit</option>
+          <option value="10">10 — Boss</option>
+        </select>
+      </div>
+
+      <div class="home-vol">
+        <label class="vol" title="Music volume"><span class="vol-t">M</span><input type="range" id="homeVolMusic" min="0" max="100" value="70" /></label>
+        <label class="vol" title="Sound effects volume"><span class="vol-t">S</span><input type="range" id="homeVolSfx" min="0" max="100" value="80" /></label>
+      </div>
+
+      <button type="button" id="btnHomePlay" class="btn-home-play">Play</button>
+    </div>
+  </div>
+
+  <div id="wrap" class="game-wrap" hidden>
+    <header class="hud-top">
+      <div class="hud-left">
+        <span id="levelLabel">LEVEL —</span>
+        <span id="sectorLabel">SECTOR —</span>
+      </div>
+      <div class="hud-center">
+        <span id="scoreLabel">SCORE 0</span>
+        <span id="comboLabel">COMBO x1</span>
+        <span id="scrapLabel">SCRAP 0</span>
+        <span id="livesLabel">LIVES 3</span>
+      </div>
+    </header>
+    <div class="game-stage">
+      <canvas id="game" width="320" height="180" tabindex="0" aria-label="Game canvas"></canvas>
+    </div>
+    <p id="objectiveLine" class="objective-bar">Objective: —</p>
+    <footer class="hud-foot">Shard Circuit — original game</footer>
+  </div>
+
+  <div id="cutscene" class="cutscene-cinematic" hidden aria-live="polite">
+    <canvas id="cutsceneFx" class="cutscene-fx-canvas" aria-hidden="true"></canvas>
+    <div class="cutscene-vignette"></div>
+    <div class="cutscene-stage" id="cutsceneStage">
+      <p class="cutscene-chapter" id="cutsceneChapter">STORY</p>
+      <div class="cutscene-characters" id="cutsceneCharacters">
+        <div class="cutscene-slot cutscene-slot-left" id="cutsceneSlotLeft" hidden>
+          <canvas id="portraitLeft" width="280" height="280" class="cutscene-portrait-canvas"></canvas>
+        </div>
+        <div class="cutscene-slot cutscene-slot-right" id="cutsceneSlotRight" hidden>
+          <canvas id="portraitRight" width="280" height="280" class="cutscene-portrait-canvas"></canvas>
+        </div>
+      </div>
+      <div class="cutscene-dialogue">
+        <div class="dialogue-nameplate" id="cutsceneSpeaker"></div>
+        <p class="dialogue-body" id="cutsceneLine"></p>
+        <p class="dialogue-hint"><span class="dialogue-arrow">▼</span> Enter · Space · Click</p>
+      </div>
+    </div>
+    <button type="button" id="btnCutsceneNext" class="btn-cutscene">Continue</button>
+  </div>
+
+  <div id="overlay" class="overlay" hidden>
+    <div class="panel">
+      <h1 id="panelTitle">SHARD CIRCUIT</h1>
+      <p id="panelText" class="sub">Move, collect shards, reach the exit.</p>
+      <p class="controls" id="panelControls">
+        Move: <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>WASD</kbd><br />
+        <kbd>Space</kbd> — weapon (if equipped) · Pause: <kbd>P</kbd> or <kbd>Esc</kbd>
+      </p>
+      <button type="button" id="btnStart">Continue</button>
+    </div>
+  </div>
+  <script src="js/audio.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

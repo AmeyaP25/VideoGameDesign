@@ -1,0 +1,613 @@
+:root {
+  --bg: #0a0a12;
+  --panel: #12121c;
+  --accent: #00ffc8;
+  --accent2: #ff3d7f;
+  --text: #e8e8f0;
+  --muted: #6a6a80;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;
+}
+
+#wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+}
+
+.home-screen[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.hud-top {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  padding: 0.4rem 0.65rem;
+  font-size: clamp(0.65rem, 1.6vw, 0.8rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #1e1e2e;
+  background: rgba(5, 5, 12, 0.95);
+}
+
+.hud-left, .hud-center {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.hud-center {
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 10rem;
+}
+
+.vol {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.vol input[type="range"] {
+  width: 4rem;
+  vertical-align: middle;
+}
+
+.vol-t {
+  min-width: 0.6em;
+}
+
+.game-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 30%, #12121c 0%, #030308 70%);
+  padding: 0.25rem;
+}
+
+#game {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(100vw - 0.5rem, calc((100vh - 8.5rem) * 16 / 9), calc((100dvh - 8.5rem) * 16 / 9));
+  height: min(calc((100vw - 0.5rem) * 9 / 16), 100vh - 8.5rem, 100dvh - 8.5rem);
+  max-width: 100%;
+  max-height: 100%;
+  border: 2px solid #2a2a3a;
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 32px rgba(0, 255, 200, 0.12),
+    inset 0 0 80px rgba(0, 0, 0, 0.35);
+  background: #050508;
+}
+
+.objective-bar {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: clamp(0.7rem, 1.6vw, 0.82rem);
+  color: #9a9ab8;
+  text-align: center;
+  letter-spacing: 0.04em;
+  border-top: 1px solid #1e1e2e;
+  background: rgba(5, 5, 12, 0.92);
+}
+
+.hud-foot {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  font-size: clamp(0.6rem, 1.4vw, 0.72rem);
+  padding: 0.3rem 0.5rem 0.45rem;
+}
+
+#comboLabel {
+  color: var(--accent2);
+}
+
+.btn-cutscene {
+  background: var(--accent2);
+  color: #0a0508;
+  border: none;
+  padding: 0.65rem 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  text-transform: uppercase;
+  border-radius: 3px;
+  box-shadow: 0 0 20px rgba(255, 61, 127, 0.35);
+}
+
+.btn-cutscene:hover {
+  filter: brightness(1.1);
+}
+
+.btn-cutscene:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 10, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.overlay[hidden] {
+  display: none !important;
+}
+
+.panel {
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  padding: 1.5rem 2rem;
+  max-width: 28rem;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0, 255, 200, 0.12);
+}
+
+.panel h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.controls {
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: #b0b0c8;
+  margin-bottom: 1.25rem;
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.12em 0.45em;
+  background: #1e1e2a;
+  border: 1px solid #3a3a50;
+  border-radius: 3px;
+  font-size: 0.75em;
+  font-family: inherit;
+}
+
+#btnStart {
+  background: var(--accent);
+  color: #050508;
+  border: none;
+  padding: 0.65rem 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+#btnStart:hover {
+  filter: brightness(1.08);
+}
+
+#btnStart:focus {
+  outline: 2px solid var(--accent2);
+  outline-offset: 3px;
+}
+
+/* —— Title / home screen —— */
+.home-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#homeCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.home-ui {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 5vw, 3rem);
+  padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
+  margin: 0;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.home-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.home-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(2.25rem, 11vw, 5.25rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.05;
+  color: #e8f8ff;
+  text-shadow: 0 0 48px rgba(0, 255, 200, 0.2);
+  max-width: 100%;
+}
+
+.home-title-line {
+  display: inline-block;
+}
+
+.home-title-accent {
+  display: inline-block;
+  color: var(--accent2);
+  text-shadow: 0 0 36px rgba(255, 61, 127, 0.45);
+}
+
+.home-tagline {
+  margin: 0 0 1.5rem;
+  font-size: clamp(0.88rem, 2.5vw, 1.12rem);
+  color: #a0a8c0;
+  line-height: 1.5;
+  max-width: min(36rem, 92vw);
+}
+
+.home-howto {
+  width: 100%;
+  max-width: min(40rem, 94vw);
+  text-align: left;
+  background: rgba(8, 8, 18, 0.78);
+  border: 1px solid #2a3048;
+  border-radius: 6px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 200, 0.06);
+}
+
+.home-howto h2 {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.home-howto-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: clamp(0.78rem, 2vw, 0.88rem);
+  line-height: 1.7;
+  color: #c4c8d8;
+}
+
+.home-howto-list li {
+  margin-bottom: 0.35rem;
+}
+
+.home-start-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: min(36rem, 92vw);
+}
+
+.home-level-select {
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a0a8c0;
+}
+
+.home-start-level {
+  flex: 1 1 12rem;
+  min-width: min(100%, 14rem);
+  max-width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: clamp(0.78rem, 2vw, 0.88rem);
+  color: #e8ecff;
+  background: rgba(12, 12, 24, 0.92);
+  border: 1px solid #2a3048;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.home-start-level:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home-vol {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.btn-home-play {
+  background: linear-gradient(180deg, #00ffd0 0%, #00c8a8 100%);
+  color: #050810;
+  border: none;
+  padding: 0.85rem 2.75rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  box-shadow: 0 0 28px rgba(0, 255, 200, 0.35);
+}
+
+.btn-home-play:hover {
+  filter: brightness(1.08);
+}
+
+.btn-home-play:focus {
+  outline: 2px solid var(--accent2);
+  outline-offset: 4px;
+}
+
+.game-wrap[hidden] {
+  display: none !important;
+}
+
+/* —— Cinematic cutscenes —— */
+.cutscene-cinematic {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+  padding-bottom: clamp(0.65rem, 2vh, 1.25rem);
+  background: linear-gradient(165deg, #030308 0%, #0c0820 35%, #06040e 100%);
+}
+
+.cutscene-cinematic[hidden] {
+  display: none !important;
+}
+
+.cutscene-fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cutscene-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 35%, transparent 0%, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+  transition: box-shadow 0.4s ease;
+}
+
+.cutscene-cinematic[data-mood="threat"] .cutscene-vignette {
+  box-shadow: inset 0 0 120px rgba(120, 0, 40, 0.45);
+}
+
+.cutscene-cinematic[data-mood="hero"] .cutscene-vignette {
+  box-shadow: inset 0 0 100px rgba(0, 80, 70, 0.25);
+}
+
+.cutscene-cinematic[data-mood="system"] .cutscene-vignette {
+  box-shadow: inset 0 0 100px rgba(40, 60, 140, 0.35);
+}
+
+.cutscene-stage {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.cutscene-chapter {
+  position: absolute;
+  top: clamp(0.4rem, 1.8vh, 1rem);
+  left: 0;
+  right: 0;
+  z-index: 4;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.58rem, 1.6vw, 0.72rem);
+  letter-spacing: 0.42em;
+  color: var(--muted);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.cutscene-characters {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(0.35rem, 2vw, 1.5rem);
+  padding: clamp(2.5rem, 7vh, 3.5rem) clamp(0.5rem, 2vw, 1.25rem) clamp(0.35rem, 1.5vh, 0.75rem);
+  width: 100%;
+}
+
+.cutscene-characters[data-layout="dual"] {
+  align-items: stretch;
+}
+
+.cutscene-characters[data-layout="dual"] .cutscene-slot {
+  flex: 1 1 50%;
+  max-width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cutscene-slot {
+  flex: 0 0 auto;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cutscene-characters[data-layout="dual"] .cutscene-slot.is-active {
+  transform: translateY(-6px) scale(1.02);
+}
+
+.cutscene-characters:not([data-layout="dual"]) .cutscene-slot.is-active {
+  transform: translateY(-4px) scale(1.01);
+}
+
+.cutscene-slot.is-dim {
+  opacity: 0.5;
+  filter: saturate(0.55) brightness(0.92);
+}
+
+.cutscene-portrait-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(88vmin, 92vw);
+  height: min(88vmin, 92vw);
+  max-height: min(78vh, calc(100dvh - 14rem));
+  max-width: min(920px, 92vw);
+  border: 3px solid #2a3048;
+  background: #080810;
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.55);
+}
+
+.cutscene-characters[data-layout="dual"] .cutscene-portrait-canvas {
+  width: min(44vmin, 46vw);
+  height: min(44vmin, 46vw);
+  max-height: min(68vh, calc(100dvh - 15rem));
+  max-width: min(460px, 46vw);
+}
+
+.cutscene-slot.is-active .cutscene-portrait-canvas {
+  border-color: var(--accent);
+  box-shadow: 0 0 32px rgba(0, 255, 200, 0.2), 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.cutscene-cinematic[data-mood="threat"] .cutscene-slot-right.is-active .cutscene-portrait-canvas {
+  border-color: var(--accent2);
+  box-shadow: 0 0 36px rgba(255, 61, 127, 0.35), 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.cutscene-dialogue {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0 clamp(0.5rem, 2vw, 1rem);
+  background: linear-gradient(180deg, rgba(10, 10, 18, 0.97) 0%, rgba(6, 6, 14, 0.99) 100%);
+  border: 2px solid #2a3550;
+  border-radius: 4px;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem) 0.65rem;
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.dialogue-nameplate {
+  font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  margin-bottom: 0.45rem;
+  color: var(--accent);
+}
+
+.dialogue-body {
+  margin: 0;
+  font-size: clamp(0.88rem, 2.3vw, 1.05rem);
+  line-height: 1.55;
+  color: #e4e4f0;
+  min-height: 3.2em;
+}
+
+.dialogue-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.dialogue-arrow {
+  color: var(--accent2);
+  animation: cutscene-blink 1s step-end infinite;
+}
+
+@keyframes cutscene-blink {
+  50% { opacity: 0.3; }
+}
+
+.cutscene-cinematic .btn-cutscene {
+  position: relative;
+  z-index: 3;
+  align-self: center;
+  margin: 0.5rem 0 0;
+}
+
