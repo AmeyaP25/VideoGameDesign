@@ -20,6 +20,10 @@
   const COMBO_WINDOW = 1.35;
   const SHARD_VALUE = 100;
   const START_LIVES = 3;
+  const START_LIVES_COOP = 5;
+  const COOP_LINK_DIST = 44;
+  const COOP_LINK_MULT = 1.22;
+  const COOP_PUSH = 0.55;
   const INVULN_HIT = 2.0;
   const HIT_COOLDOWN_TILE = 0.55;
   const PULSE_CYCLE = 1.85;
@@ -56,9 +60,30 @@
   let levelTime = 0;
   let lastGateFlip = -1;
 
-  let player = { x: 0, y: 0, vx: 0, vy: 0 };
-  let spawnPx = 0;
-  let spawnPy = 0;
+  function newPlayerBody() {
+    return {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      pvx: 0,
+      pvy: 0,
+      lastAimX: 1,
+      lastAimY: 0,
+      invuln: 0,
+      hazardCd: 0,
+      weaponMode: null,
+      weaponCd: 0,
+      speedBoostTimer: 0,
+      teleportCd: 0,
+    };
+  }
+  let players = [newPlayerBody(), newPlayerBody()];
+  let coopMode = false;
+  let spawnPts = [
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+  ];
   let score = 0;
   let lives = START_LIVES;
   let shardsCollected = 0;
@@ -70,28 +95,21 @@
   let playerShots = [];
   let particles = [];
   let floatTexts = [];
-  let trail = [];
+  let trail = [[], []];
   let stars = [];
-  let pvx = 0;
-  let pvy = 0;
-  let speedBoostTimer = 0;
-  let teleportCd = 0;
   let scrapCollected = 0;
 
   let combo = 1;
   let comboTimer = 0;
-  let invuln = 0;
-  let hazardCd = 0;
   let shake = 0;
 
   let lastMusicSector = 0;
 
-  let weaponMode = null;
-  let weaponCd = 0;
-  let lastAimX = 1;
-  let lastAimY = 0;
-
   const keys = Object.create(null);
+  const touchPad = [
+    { ix: 0, iy: 0, firing: false, stickActive: false, cx: 0, cy: 0, pid: null },
+    { ix: 0, iy: 0, firing: false, stickActive: false, cx: 0, cy: 0, pid: null },
+  ];
   const overlay = document.getElementById("overlay");
   const panelTitle = document.getElementById("panelTitle");
   const panelText = document.getElementById("panelText");
@@ -107,6 +125,10 @@
   const gameWrap = document.getElementById("wrap");
   const btnHomePlay = document.getElementById("btnHomePlay");
   const homeStartLevel = document.getElementById("homeStartLevel");
+  const panelCoopHint = document.getElementById("panelCoopHint");
+  const touchLayer = document.getElementById("touchLayer");
+  const touchHud = document.getElementById("touchHud");
+  const homeCoopMode = document.getElementById("homeCoopMode");
 
   const cutsceneEl = document.getElementById("cutscene");
   const cutsceneFx = document.getElementById("cutsceneFx");
@@ -147,6 +169,116 @@
 
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
+  }
+
+  function plCount() {
+    return coopMode ? 2 : 1;
+  }
+
+  function coopLinkActive() {
+    if (!coopMode || plCount() < 2) return false;
+    const dx = players[0].x - players[1].x;
+    const dy = players[0].y - players[1].y;
+    return Math.hypot(dx, dy) < COOP_LINK_DIST;
+  }
+
+  function shouldShowTouchLayer() {
+    if (!coopMode) return false;
+    try {
+      if (window.matchMedia("(pointer: coarse)").matches) return true;
+      if (window.matchMedia("(max-width: 900px)").matches) return true;
+    } catch (_) {}
+    return typeof window.ontouchstart !== "undefined";
+  }
+
+  function syncTouchLayer() {
+    const show = coopMode && state === "playing" && shouldShowTouchLayer();
+    if (touchLayer) {
+      touchLayer.hidden = !show;
+      touchLayer.setAttribute("aria-hidden", show ? "false" : "true");
+    }
+    if (touchHud) {
+      touchHud.hidden = !show;
+      touchHud.setAttribute("aria-hidden", show ? "false" : "true");
+    }
+    if (gameWrap) gameWrap.classList.toggle("coop-touch-pad", show);
+  }
+
+  function nearestPlayerTo(wx, wy) {
+    const n = plCount();
+    let best = 0;
+    let bd = 1e9;
+    for (let i = 0; i < n; i++) {
+      const pl = players[i];
+      const cx = pl.x + PLAYER_W * 0.5;
+      const cy = pl.y + PLAYER_H * 0.5;
+      const d = Math.hypot(wx - cx, wy - cy);
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    }
+    const pl = players[best];
+    return { i: best, pcx: pl.x + PLAYER_W * 0.5, pcy: pl.y + PLAYER_H * 0.5 };
+  }
+
+  function keyboardMove(pi) {
+    let ix = 0;
+    let iy = 0;
+    if (!coopMode) {
+      if (keys.ArrowLeft || keys.a || keys.A) ix -= 1;
+      if (keys.ArrowRight || keys.d || keys.D) ix += 1;
+      if (keys.ArrowUp || keys.w || keys.W) iy -= 1;
+      if (keys.ArrowDown || keys.s || keys.S) iy += 1;
+    } else if (pi === 0) {
+      if (keys.a || keys.A) ix -= 1;
+      if (keys.d || keys.D) ix += 1;
+      if (keys.w || keys.W) iy -= 1;
+      if (keys.s || keys.S) iy += 1;
+    } else {
+      if (keys.ArrowLeft) ix -= 1;
+      if (keys.ArrowRight) ix += 1;
+      if (keys.ArrowUp) iy -= 1;
+      if (keys.ArrowDown) iy += 1;
+    }
+    const ilen = Math.hypot(ix, iy) || 1;
+    return { ix: ix / ilen, iy: iy / ilen };
+  }
+
+  function mergeMove(pi, kix, kiy) {
+    let ix = kix;
+    let iy = kiy;
+    if (coopMode) {
+      ix += touchPad[pi].ix;
+      iy += touchPad[pi].iy;
+    }
+    const len = Math.hypot(ix, iy);
+    if (len < 0.02) return { ix: 0, iy: 0 };
+    if (len > 1) {
+      ix /= len;
+      iy /= len;
+    }
+    return { ix, iy };
+  }
+
+  function resolvePlayerOverlap() {
+    if (!coopMode) return;
+    const a = players[0];
+    const b = players[1];
+    let dx = b.x + PLAYER_W * 0.5 - (a.x + PLAYER_W * 0.5);
+    let dy = b.y + PLAYER_H * 0.5 - (a.y + PLAYER_H * 0.5);
+    const dist = Math.hypot(dx, dy);
+    const minD = PLAYER_W * 0.95;
+    if (dist < 0.01 || dist >= minD) return;
+    const push = (minD - dist) * COOP_PUSH;
+    dx = (dx / dist) * push;
+    dy = (dy / dist) * push;
+    const ma = moveAndCollide(a.x, a.y, PLAYER_W, PLAYER_H, -dx, -dy);
+    const mb = moveAndCollide(b.x, b.y, PLAYER_W, PLAYER_H, dx, dy);
+    a.x = ma.x;
+    a.y = ma.y;
+    b.x = mb.x;
+    b.y = mb.y;
   }
 
   function aabb(ax, ay, aw, ah, bx, by, bw, bh) {
@@ -504,21 +636,40 @@
     projectiles.length = 0;
     playerShots.length = 0;
     floatTexts.length = 0;
-    trail.length = 0;
-    pvx = 0;
-    pvy = 0;
-    speedBoostTimer = 0;
-    teleportCd = 0;
-    weaponCd = 0;
-    weaponMode = level.isBoss ? "boss_saber" : null;
-    lastAimX = 1;
-    lastAimY = 0;
+    trail[0].length = 0;
+    trail[1].length = 0;
 
-    const p = spawnWorldFromTile(level.spawn.tx, level.spawn.ty, PLAYER_W, PLAYER_H);
-    player.x = p.x;
-    player.y = p.y;
-    spawnPx = p.x;
-    spawnPy = p.y;
+    const base = spawnWorldFromTile(level.spawn.tx, level.spawn.ty, PLAYER_W, PLAYER_H);
+    const wm = level.isBoss ? "boss_saber" : null;
+    for (let i = 0; i < 2; i++) {
+      const pl = players[i];
+      pl.pvx = 0;
+      pl.pvy = 0;
+      pl.speedBoostTimer = 0;
+      pl.teleportCd = 0;
+      pl.weaponCd = 0;
+      pl.weaponMode = wm;
+      pl.lastAimX = 1;
+      pl.lastAimY = 0;
+    }
+    if (coopMode) {
+      const ox = 9;
+      const p0 = { x: base.x - ox, y: base.y };
+      const p1 = { x: base.x + ox, y: base.y };
+      players[0].x = clamp(p0.x, 0, W - PLAYER_W);
+      players[0].y = clamp(p0.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
+      players[1].x = clamp(p1.x, 0, W - PLAYER_W);
+      players[1].y = clamp(p1.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
+      spawnPts[0].x = players[0].x;
+      spawnPts[0].y = players[0].y;
+      spawnPts[1].x = players[1].x;
+      spawnPts[1].y = players[1].y;
+    } else {
+      players[0].x = base.x;
+      players[0].y = base.y;
+      spawnPts[0].x = base.x;
+      spawnPts[0].y = base.y;
+    }
 
     enemies.length = 0;
     for (const e of level.enemies) {
@@ -597,13 +748,17 @@
 
     combo = 1;
     comboTimer = 0;
-    invuln = 0.5;
-    hazardCd = 0;
+    const n = plCount();
+    for (let i = 0; i < n; i++) {
+      players[i].invuln = 0.5;
+      players[i].hazardCd = 0;
+    }
   }
 
-  function newRun(startLevelIdx) {
+  function newRun(startLevelIdx, opts) {
+    coopMode = !!(opts && opts.coop);
     score = 0;
-    lives = START_LIVES;
+    lives = coopMode ? START_LIVES_COOP : START_LIVES;
     const idx = clamp(
       startLevelIdx == null || !Number.isFinite(Number(startLevelIdx)) ? 0 : Number(startLevelIdx),
       0,
@@ -642,17 +797,19 @@
     }
   }
 
-  function tryFireWeapon() {
-    if (state !== "playing" || !weaponMode || weaponCd > 0) return;
-    const ax = lastAimX;
-    const ay = lastAimY;
+  function tryFireWeapon(pi) {
+    if (state !== "playing") return;
+    const pl = players[pi];
+    if (!pl.weaponMode || pl.weaponCd > 0) return;
+    const ax = pl.lastAimX;
+    const ay = pl.lastAimY;
     const len = Math.hypot(ax, ay) || 1;
     const nx = ax / len;
     const ny = ay / len;
-    const cx = player.x + PLAYER_W * 0.5;
-    const cy = player.y + PLAYER_H * 0.5;
-    if (weaponMode === "raygun") {
-      weaponCd = PLAYER_RAY_CD;
+    const cx = pl.x + PLAYER_W * 0.5;
+    const cy = pl.y + PLAYER_H * 0.5;
+    if (pl.weaponMode === "raygun") {
+      pl.weaponCd = PLAYER_RAY_CD;
       const pw = PLAYER_RAY_SZ;
       const ph = PLAYER_RAY_SZ;
       let bx = cx - pw * 0.5;
@@ -674,10 +831,11 @@
         vy: ny * PLAYER_RAY_SPEED,
         life: 2.6,
         kind: "ray",
+        owner: pi,
       });
       A.playSfx("ray_fire");
-    } else if (weaponMode === "boss_saber") {
-      weaponCd = PLAYER_SABER_CD;
+    } else if (pl.weaponMode === "boss_saber") {
+      pl.weaponCd = PLAYER_SABER_CD;
       playerShots.push({
         x: cx + nx * 6 - 6,
         y: cy + ny * 6 - 3,
@@ -687,6 +845,7 @@
         vy: ny * 200,
         life: 0.24,
         kind: "saber",
+        owner: pi,
       });
       A.playSfx("saber_swing");
     }
@@ -708,16 +867,17 @@
     return r;
   }
 
-  function playerHit(source) {
-    if (invuln > 0) return;
+  function playerHit(pi, source) {
+    const pl = players[pi];
+    if (pl.invuln > 0) return;
     lives -= 1;
     combo = 1;
     comboTimer = 0;
-    invuln = INVULN_HIT;
-    hazardCd = HIT_COOLDOWN_TILE;
+    pl.invuln = INVULN_HIT;
+    pl.hazardCd = HIT_COOLDOWN_TILE;
     shake = 0.4;
     A.playSfx("hit");
-    addParticles(player.x + PLAYER_W * 0.5, player.y + PLAYER_H * 0.5, "#ff3d7f", 12);
+    addParticles(pl.x + PLAYER_W * 0.5, pl.y + PLAYER_H * 0.5, "#ff3d7f", 12);
     if (lives <= 0) {
       state = "gameover";
       A.stopMusic();
@@ -725,8 +885,10 @@
       showOverlay();
       return;
     }
-    player.x = spawnPx;
-    player.y = spawnPy;
+    pl.x = spawnPts[pi].x;
+    pl.y = spawnPts[pi].y;
+    pl.pvx = 0;
+    pl.pvy = 0;
   }
 
   function completeLevel() {
@@ -774,11 +936,15 @@
     comboTimer = Math.max(0, comboTimer - dt);
     if (comboTimer <= 0) combo = 1;
 
-    invuln = Math.max(0, invuln - dt);
-    hazardCd = Math.max(0, hazardCd - dt);
-    weaponCd = Math.max(0, weaponCd - dt);
-    speedBoostTimer = Math.max(0, speedBoostTimer - dt);
-    teleportCd = Math.max(0, teleportCd - dt);
+    const n = plCount();
+    for (let pi = 0; pi < n; pi++) {
+      const pl = players[pi];
+      pl.invuln = Math.max(0, pl.invuln - dt);
+      pl.hazardCd = Math.max(0, pl.hazardCd - dt);
+      pl.weaponCd = Math.max(0, pl.weaponCd - dt);
+      pl.speedBoostTimer = Math.max(0, pl.speedBoostTimer - dt);
+      pl.teleportCd = Math.max(0, pl.teleportCd - dt);
+    }
 
     const gf = Math.floor(levelTime * GATE_FREQ);
     if (gf !== lastGateFlip) {
@@ -786,69 +952,71 @@
       A.playSfx("gate_toggle");
     }
 
-    let ix = 0,
-      iy = 0;
-    if (keys.ArrowLeft || keys.a || keys.A) ix -= 1;
-    if (keys.ArrowRight || keys.d || keys.D) ix += 1;
-    if (keys.ArrowUp || keys.w || keys.W) iy -= 1;
-    if (keys.ArrowDown || keys.s || keys.S) iy += 1;
-    const ilen = Math.hypot(ix, iy) || 1;
-    ix /= ilen;
-    iy /= ilen;
-    if (ix !== 0 || iy !== 0) {
-      lastAimX = ix;
-      lastAimY = iy;
+    for (let pi = 0; pi < n; pi++) {
+      const pl = players[pi];
+      const km = keyboardMove(pi);
+      let { ix, iy } = mergeMove(pi, km.ix, km.iy);
+      if (ix !== 0 || iy !== 0) {
+        pl.lastAimX = ix;
+        pl.lastAimY = iy;
+      }
+
+      let sp = SPEED;
+      if (centerMud(pl.x, pl.y)) sp *= 0.48;
+      if (pl.speedBoostTimer > 0) sp *= BOOST_PAD_MULT;
+      if (centerBoost(pl.x, pl.y)) {
+        pl.speedBoostTimer = Math.max(pl.speedBoostTimer, 2.35);
+        if (Math.random() < 0.08) addParticles(pl.x + 4, pl.y + 8, "#ffcc40", 2);
+      }
+
+      const txv = ix * sp;
+      const tyv = iy * sp;
+      if (centerIce(pl.x, pl.y)) {
+        pl.pvx += (txv - pl.pvx) * Math.min(1, ICE_LERP * dt);
+        pl.pvy += (tyv - pl.pvy) * Math.min(1, ICE_LERP * dt);
+      } else {
+        pl.pvx = txv;
+        pl.pvy = tyv;
+      }
+
+      const m = moveAndCollide(pl.x, pl.y, PLAYER_W, PLAYER_H, pl.pvx * dt, pl.pvy * dt);
+      pl.x = clamp(m.x, 0, W - PLAYER_W);
+      pl.y = clamp(m.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
     }
 
-    let sp = SPEED;
-    if (centerMud(player.x, player.y)) sp *= 0.48;
-    if (speedBoostTimer > 0) sp *= BOOST_PAD_MULT;
-    if (centerBoost(player.x, player.y)) {
-      speedBoostTimer = Math.max(speedBoostTimer, 2.35);
-      if (Math.random() < 0.08) addParticles(player.x + 4, player.y + 8, "#ffcc40", 2);
-    }
+    if (coopMode) resolvePlayerOverlap();
 
-    const txv = ix * sp;
-    const tyv = iy * sp;
-    if (centerIce(player.x, player.y)) {
-      pvx += (txv - pvx) * Math.min(1, ICE_LERP * dt);
-      pvy += (tyv - pvy) * Math.min(1, ICE_LERP * dt);
-    } else {
-      pvx = txv;
-      pvy = tyv;
-    }
+    if (touchPad[0].firing) tryFireWeapon(0);
+    if (coopMode && touchPad[1].firing) tryFireWeapon(1);
 
-    const m = moveAndCollide(player.x, player.y, PLAYER_W, PLAYER_H, pvx * dt, pvy * dt);
-    player.x = clamp(m.x, 0, W - PLAYER_W);
-    player.y = clamp(m.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
-
-    if (teleportCd <= 0 && level.teleporterPairs && level.teleporterPairs.length) {
-      const tcx = Math.floor((player.x + PLAYER_W * 0.5) / TILE);
-      const tcy = Math.floor((player.y + PLAYER_H * 0.5 - ORIGIN_Y) / TILE);
-      for (const pair of level.teleporterPairs) {
-        const hitA = pair.a.tx === tcx && pair.a.ty === tcy;
-        const hitB = pair.b.tx === tcx && pair.b.ty === tcy;
-        if (hitA || hitB) {
-          const dest = hitA ? pair.b : pair.a;
-          const np = spawnWorldFromTile(dest.tx, dest.ty, PLAYER_W, PLAYER_H);
-          player.x = np.x;
-          player.y = np.y;
-          pvx = 0;
-          pvy = 0;
-          teleportCd = TELEPORT_COOLDOWN;
-          A.playSfx("teleport");
-          addParticles(player.x + 4, player.y + 6, "#a0e8ff", 14);
-          break;
+    for (let pi = 0; pi < n; pi++) {
+      const pl = players[pi];
+      if (pl.teleportCd <= 0 && level.teleporterPairs && level.teleporterPairs.length) {
+        const tcx = Math.floor((pl.x + PLAYER_W * 0.5) / TILE);
+        const tcy = Math.floor((pl.y + PLAYER_H * 0.5 - ORIGIN_Y) / TILE);
+        for (const pair of level.teleporterPairs) {
+          const hitA = pair.a.tx === tcx && pair.a.ty === tcy;
+          const hitB = pair.b.tx === tcx && pair.b.ty === tcy;
+          if (hitA || hitB) {
+            const dest = hitA ? pair.b : pair.a;
+            const np = spawnWorldFromTile(dest.tx, dest.ty, PLAYER_W, PLAYER_H);
+            pl.x = np.x;
+            pl.y = np.y;
+            pl.pvx = 0;
+            pl.pvy = 0;
+            pl.teleportCd = TELEPORT_COOLDOWN;
+            A.playSfx("teleport");
+            addParticles(pl.x + 4, pl.y + 6, "#a0e8ff", 14);
+            break;
+          }
         }
+      }
+
+      if (pl.hazardCd <= 0 && centerDamageTile(pl.x, pl.y)) {
+        playerHit(pi, "spike");
       }
     }
 
-    if (hazardCd <= 0 && centerDamageTile(player.x, player.y)) {
-      playerHit("spike");
-    }
-
-    const pcx = player.x + PLAYER_W * 0.5;
-    const pcy = player.y + PLAYER_H * 0.5;
     for (const pul of level.pulses) {
       const cx = pul.tx * TILE + TILE * 0.5;
       const cy = ORIGIN_Y + pul.ty * TILE + TILE * 0.5;
@@ -859,12 +1027,17 @@
         A.playSfx("pulse_warn", { pitch: pul.tx * 3 });
       }
       if (lt >= PULSE_WARN && lt < PULSE_WARN + PULSE_ACTIVE) {
-        const d = Math.hypot(pcx - cx, pcy - cy);
-        if (d < PULSE_R && invuln <= 0) {
-          if (hazardCd <= 0) {
-            hazardCd = HIT_COOLDOWN_TILE;
-            A.playSfx("pulse_zap");
-            playerHit("pulse");
+        for (let pi = 0; pi < n; pi++) {
+          const pl = players[pi];
+          const pcx = pl.x + PLAYER_W * 0.5;
+          const pcy = pl.y + PLAYER_H * 0.5;
+          const d = Math.hypot(pcx - cx, pcy - cy);
+          if (d < PULSE_R && pl.invuln <= 0) {
+            if (pl.hazardCd <= 0) {
+              pl.hazardCd = HIT_COOLDOWN_TILE;
+              A.playSfx("pulse_zap");
+              playerHit(pi, "pulse");
+            }
           }
         }
       }
@@ -873,31 +1046,42 @@
     for (const s of shards) {
       if (s.taken) continue;
       s.pulse += dt * 5;
-      if (aabb(player.x, player.y, PLAYER_W, PLAYER_H, s.x, s.y, s.w, s.h)) {
-        s.taken = true;
-        shardsCollected++;
-        comboTimer = COMBO_WINDOW;
-        combo = clamp(combo + 1, 1, 8);
-        const gained = Math.floor(SHARD_VALUE * combo);
-        score += gained;
-        addParticles(s.x + 3, s.y + 3, "#00ffc8", 8);
-        A.playSfx("shard_pickup", { combo });
+      let touched = false;
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, s.x, s.y, s.w, s.h)) {
+          touched = true;
+          break;
+        }
+      }
+      if (!touched) continue;
+      s.taken = true;
+      shardsCollected++;
+      comboTimer = COMBO_WINDOW;
+      combo = clamp(combo + 1, 1, 8);
+      let gained = Math.floor(SHARD_VALUE * combo);
+      if (coopMode && coopLinkActive()) {
+        gained = Math.floor(gained * COOP_LINK_MULT);
+        popFloat(s.x, s.y - 10, "LINK!", "#ffd080");
+      }
+      score += gained;
+      addParticles(s.x + 3, s.y + 3, "#00ffc8", 8);
+      A.playSfx("shard_pickup", { combo });
 
-        if (level.objective.kind === "boss_exit") {
-          const b = bossEntity();
-          const dmg = level.objective.damagePerShard || 10;
-          if (b && !b.dead) {
-            b.hp -= dmg;
-            popFloat(s.x, s.y, `-${dmg}`, "#ff6b9d");
-            addParticles(b.x + b.w * 0.5, b.y + b.h * 0.5, "#ff40a0", 16);
-            A.playSfx("pulse_zap", { pitch: 12 });
-            if (b.hp <= 0) {
-              b.dead = true;
-              b.hp = 0;
-              shake = 0.55;
-              addParticles(b.x + b.w * 0.5, b.y + b.h * 0.5, "#ffffff", 28);
-              A.playSfx("level_complete");
-            }
+      if (level.objective.kind === "boss_exit") {
+        const b = bossEntity();
+        const dmg = level.objective.damagePerShard || 10;
+        if (b && !b.dead) {
+          b.hp -= dmg;
+          popFloat(s.x, s.y, `-${dmg}`, "#ff6b9d");
+          addParticles(b.x + b.w * 0.5, b.y + b.h * 0.5, "#ff40a0", 16);
+          A.playSfx("pulse_zap", { pitch: 12 });
+          if (b.hp <= 0) {
+            b.dead = true;
+            b.hp = 0;
+            shake = 0.55;
+            addParticles(b.x + b.w * 0.5, b.y + b.h * 0.5, "#ffffff", 28);
+            A.playSfx("level_complete");
           }
         }
       }
@@ -906,36 +1090,52 @@
     for (const sc of scraps) {
       if (sc.taken) continue;
       sc.pulse += dt * 6;
-      if (aabb(player.x, player.y, PLAYER_W, PLAYER_H, sc.x, sc.y, sc.w, sc.h)) {
-        sc.taken = true;
-        scrapCollected++;
-        const mult = Math.max(1, Math.min(combo, 5));
-        const g = Math.floor(SCRAP_VALUE * mult);
-        score += g;
-        comboTimer = COMBO_WINDOW;
-        addParticles(sc.x + 2, sc.y + 2, "#ffcc50", 6);
-        A.playSfx("scrap_pickup");
-        popFloat(sc.x, sc.y, `+${g}`, "#ffcc50");
+      let got = false;
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, sc.x, sc.y, sc.w, sc.h)) {
+          got = true;
+          break;
+        }
       }
+      if (!got) continue;
+      sc.taken = true;
+      scrapCollected++;
+      const mult = Math.max(1, Math.min(combo, 5));
+      let g = Math.floor(SCRAP_VALUE * mult);
+      if (coopMode && coopLinkActive()) g = Math.floor(g * COOP_LINK_MULT);
+      score += g;
+      comboTimer = COMBO_WINDOW;
+      addParticles(sc.x + 2, sc.y + 2, "#ffcc50", 6);
+      A.playSfx("scrap_pickup");
+      popFloat(sc.x, sc.y, `+${g}`, "#ffcc50");
     }
 
     for (const pu of powerups) {
       if (pu.taken) continue;
       pu.bob += dt * 4;
-      if (aabb(player.x, player.y, PLAYER_W, PLAYER_H, pu.x, pu.y, pu.w, pu.h)) {
-        pu.taken = true;
-        A.playSfx("powerup");
-        addParticles(pu.x + 3, pu.y + 3, "#ffffff", 12);
-        if (pu.kind === "life") {
-          lives = Math.min(MAX_LIVES, lives + 1);
-          popFloat(pu.x, pu.y, "+1 UP", "#ff6b9d");
-        } else if (pu.kind === "haste") {
-          speedBoostTimer = Math.max(speedBoostTimer, 5.2);
-          popFloat(pu.x, pu.y, "HASTE", "#40d8ff");
-        } else if (pu.kind === "raygun") {
-          weaponMode = "raygun";
-          popFloat(pu.x, pu.y, "SIDEARM", "#ffb060");
+      let picker = -1;
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, pu.x, pu.y, pu.w, pu.h)) {
+          picker = pi;
+          break;
         }
+      }
+      if (picker < 0) continue;
+      const pl = players[picker];
+      pu.taken = true;
+      A.playSfx("powerup");
+      addParticles(pu.x + 3, pu.y + 3, "#ffffff", 12);
+      if (pu.kind === "life") {
+        lives = Math.min(MAX_LIVES, lives + 1);
+        popFloat(pu.x, pu.y, "+1 UP", "#ff6b9d");
+      } else if (pu.kind === "haste") {
+        pl.speedBoostTimer = Math.max(pl.speedBoostTimer, 5.2);
+        popFloat(pu.x, pu.y, "HASTE", "#40d8ff");
+      } else if (pu.kind === "raygun") {
+        pl.weaponMode = "raygun";
+        popFloat(pu.x, pu.y, "SIDEARM", "#ffb060");
       }
     }
 
@@ -953,8 +1153,9 @@
           e.vy *= -1;
         }
       } else if (e.type === "pursuer" || e.type === "titan") {
-        let dx = player.x + PLAYER_W * 0.5 - (e.x + e.w * 0.5);
-        let dy = player.y + PLAYER_H * 0.5 - (e.y + e.h * 0.5);
+        const np = nearestPlayerTo(e.x + e.w * 0.5, e.y + e.h * 0.5);
+        let dx = np.pcx - (e.x + e.w * 0.5);
+        let dy = np.pcy - (e.y + e.h * 0.5);
         const len = Math.hypot(dx, dy) || 1;
         dx = (dx / len) * e.spd * dt;
         dy = (dy / len) * e.spd * dt;
@@ -968,10 +1169,9 @@
           e.timer = e.period;
           const sx = e.x + e.w * 0.5;
           const sy = e.y + e.h * 0.5;
-          const px = player.x + PLAYER_W * 0.5;
-          const py = player.y + PLAYER_H * 0.5;
-          let dx = px - sx;
-          let dy = py - sy;
+          const np = nearestPlayerTo(sx, sy);
+          let dx = np.pcx - sx;
+          let dy = np.pcy - sy;
           const len = Math.hypot(dx, dy) || 1;
           dx /= len;
           dy /= len;
@@ -985,8 +1185,9 @@
           A.playSfx("sentry_shoot");
         }
       } else if (e.type === "boss" && !e.dead) {
-        let dx = player.x + PLAYER_W * 0.5 - (e.x + e.w * 0.5);
-        let dy = player.y + PLAYER_H * 0.5 - (e.y + e.h * 0.5);
+        const np = nearestPlayerTo(e.x + e.w * 0.5, e.y + e.h * 0.5);
+        let dx = np.pcx - (e.x + e.w * 0.5);
+        let dy = np.pcy - (e.y + e.h * 0.5);
         const len = Math.hypot(dx, dy) || 1;
         dx = (dx / len) * e.spd * dt;
         dy = (dy / len) * e.spd * dt;
@@ -1024,16 +1225,26 @@
       }
 
       if (e.type === "boss" && e.dead) continue;
-      if (invuln <= 0 && aabb(player.x, player.y, PLAYER_W, PLAYER_H, e.x, e.y, e.w, e.h)) {
-        if (hazardCd <= 0) playerHit("enemy");
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (pl.invuln <= 0 && pl.hazardCd <= 0 && aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, e.x, e.y, e.w, e.h)) {
+          playerHit(pi, "enemy");
+          break;
+        }
       }
     }
 
     if (exitUnlocked()) {
       const er = exitRect();
-      if (aabb(player.x, player.y, PLAYER_W, PLAYER_H, er.x + 2, er.y + 2, er.w - 4, er.h - 4)) {
-        completeLevel();
+      let allIn = true;
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (!aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, er.x + 2, er.y + 2, er.w - 4, er.h - 4)) {
+          allIn = false;
+          break;
+        }
       }
+      if (allIn) completeLevel();
     }
 
     for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -1045,12 +1256,19 @@
         projectiles.splice(i, 1);
         continue;
       }
-      if (invuln <= 0 && hazardCd <= 0) {
-        if (aabb(player.x, player.y, PLAYER_W, PLAYER_H, b.x, b.y, PROJ_SZ, PROJ_SZ)) {
-          projectiles.splice(i, 1);
-          playerHit("bolt");
+      let hit = false;
+      for (let pi = 0; pi < n; pi++) {
+        const pl = players[pi];
+        if (pl.invuln <= 0 && pl.hazardCd <= 0) {
+          if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, b.x, b.y, PROJ_SZ, PROJ_SZ)) {
+            projectiles.splice(i, 1);
+            playerHit(pi, "bolt");
+            hit = true;
+            break;
+          }
         }
       }
+      if (hit) continue;
     }
 
     for (let si = playerShots.length - 1; si >= 0; si--) {
@@ -1085,17 +1303,21 @@
       if (removed) continue;
     }
 
-    if (Math.abs(pvx) + Math.abs(pvy) > 25) {
-      trail.push({
-        x: player.x,
-        y: player.y,
-        t: 0,
-      });
-      while (trail.length > 12) trail.shift();
-    }
-    for (const tr of trail) tr.t += dt;
-    for (let i = trail.length - 1; i >= 0; i--) {
-      if (trail[i].t > 0.9) trail.splice(i, 1);
+    for (let pi = 0; pi < n; pi++) {
+      const pl = players[pi];
+      const trl = trail[pi];
+      if (Math.abs(pl.pvx) + Math.abs(pl.pvy) > 25) {
+        trl.push({
+          x: pl.x,
+          y: pl.y,
+          t: 0,
+        });
+        while (trl.length > 12) trl.shift();
+      }
+      for (const tr of trl) tr.t += dt;
+      for (let ti = trl.length - 1; ti >= 0; ti--) {
+        if (trl[ti].t > 0.9) trl.splice(ti, 1);
+      }
     }
 
     for (let i = floatTexts.length - 1; i >= 0; i--) {
@@ -1115,6 +1337,7 @@
     }
 
     shake = Math.max(0, shake - dt);
+    syncTouchLayer();
   }
 
   function drawTiles() {
@@ -1363,12 +1586,16 @@
   }
 
   function drawTrail() {
-    for (const tr of trail) {
-      const k = Math.max(0, 0.35 - tr.t * 0.4);
-      if (k <= 0) continue;
-      ctx.globalAlpha = k * 0.28;
-      ctx.fillStyle = "#5a9888";
-      ctx.fillRect(tr.x | 0, tr.y | 0, PLAYER_W, PLAYER_H - 4);
+    const n = plCount();
+    for (let pi = 0; pi < n; pi++) {
+      const tint = pi === 0 ? "#5a9888" : "#9868a0";
+      for (const tr of trail[pi]) {
+        const k = Math.max(0, 0.35 - tr.t * 0.4);
+        if (k <= 0) continue;
+        ctx.globalAlpha = k * 0.28;
+        ctx.fillStyle = tint;
+        ctx.fillRect(tr.x | 0, tr.y | 0, PLAYER_W, PLAYER_H - 4);
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -1674,22 +1901,30 @@
     }
   }
 
-  function drawPlayer() {
-    const px = player.x | 0;
-    const py = player.y | 0;
+  function drawPlayer(pi) {
+    const pl = players[pi];
+    const px = pl.x | 0;
+    const py = pl.y | 0;
+    const pFlash = pl.invuln > 0 && Math.floor(levelTime * 12) % 2 === 0;
+    const bodyTint = pi === 0 ? (pFlash ? "#c8e0d8" : "#4a9088") : pFlash ? "#e8d0e8" : "#9060a0";
+    const faceHi = pi === 0 ? "#f2f4f0" : "#ffe8f8";
+    const stripeCol = pi === 0 ? "#e89840" : "#ff80c8";
+    const jetCol = pi === 0 ? "#40ffc8" : "#ff80d8";
+    const packCol = pi === 0 ? "#2a4550" : "#502848";
+    const packDeep = pi === 0 ? "#1a3040" : "#301828";
     const drawExtras = (ox, oy, packA, jetA) => {
       ctx.globalAlpha = packA;
-      ctx.fillStyle = "#2a4550";
+      ctx.fillStyle = packCol;
       ctx.fillRect(px - 2 + ox, py + 3 + oy, 3, 10);
-      ctx.fillStyle = "#1a3040";
+      ctx.fillStyle = packDeep;
       ctx.fillRect(px - 2 + ox, py + 5 + oy, 2, 6);
       ctx.globalAlpha = jetA;
       const flick = (Math.floor(levelTime * 18) % 2) * 0.5;
-      ctx.fillStyle = "#40ffc8";
+      ctx.fillStyle = jetCol;
       ctx.fillRect(px + 1 + ox, py + 11 + oy, 3, 1 + flick);
       ctx.fillRect(px + PLAYER_W - 4 + ox, py + 11 + oy, 3, 1 + flick);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = "#00ffc8";
+      ctx.fillStyle = jetCol;
       ctx.fillRect(px + 3 + ox, py - 5 + oy, 2, 2);
       ctx.fillRect(px + 4 + ox, py - 6 + oy, 1, 2);
     };
@@ -1726,25 +1961,23 @@
       ctx.fillRect(px + 3 + ox, py + 6 + oy, PLAYER_W - 6, 2);
       ctx.fillRect(px + 3 + ox, py + 9 + oy, PLAYER_W - 6, 1);
     };
-    const flash = invuln > 0 && Math.floor(levelTime * 12) % 2 === 0;
-    const body = flash ? "#c8e0d8" : "#4a9088";
-    drawBody(0, 0, body, "#1a5048", "#0a2820");
+    drawBody(0, 0, bodyTint, pi === 0 ? "#1a5048" : "#501838", "#0a2820");
     drawExtras(0, 0, 1, 1);
-    drawFace(0, 0, "#f2f4f0", "#0a2820");
-    drawSuitDetail(0, 0, "#e89840", "#0a2820");
-    if (weaponMode === "raygun") {
-      const fx = lastAimX >= 0 ? px + PLAYER_W - 2 : px - 3;
+    drawFace(0, 0, faceHi, "#0a2820");
+    drawSuitDetail(0, 0, stripeCol, "#0a2820");
+    if (pl.weaponMode === "raygun") {
+      const fx = pl.lastAimX >= 0 ? px + PLAYER_W - 2 : px - 3;
       ctx.fillStyle = "#2a3840";
       ctx.fillRect(fx, py + 5, 4, 3);
       ctx.fillStyle = "#ffb050";
-      ctx.fillRect(fx + (lastAimX >= 0 ? 3 : 0), py + 5, 1, 1);
-    } else if (weaponMode === "boss_saber") {
-      const hx = lastAimX >= 0 ? px + PLAYER_W - 1 : px - 4;
+      ctx.fillRect(fx + (pl.lastAimX >= 0 ? 3 : 0), py + 5, 1, 1);
+    } else if (pl.weaponMode === "boss_saber") {
+      const hx = pl.lastAimX >= 0 ? px + PLAYER_W - 1 : px - 4;
       ctx.fillStyle = "#4a2a60";
       ctx.fillRect(hx, py + 4, 3, 5);
-      const blade = (Math.floor(levelTime * 12) % 2) ? "#a0ffff" : "#ffffff";
+      const blade = Math.floor(levelTime * 12) % 2 ? "#a0ffff" : "#ffffff";
       ctx.fillStyle = blade;
-      ctx.fillRect(hx + (lastAimX >= 0 ? 2 : -2), py + 2, 2, 4);
+      ctx.fillRect(hx + (pl.lastAimX >= 0 ? 2 : -2), py + 2, 2, 4);
     }
   }
 
@@ -1793,7 +2026,7 @@
       drawPlayerShots();
       drawTrail();
       drawEnemies();
-      drawPlayer();
+      for (let pi = 0; pi < plCount(); pi++) drawPlayer(pi);
     }
     drawParticles();
     drawFloatTexts();
@@ -1825,7 +2058,7 @@
     if (level && (level.scrapTotal || 0) > 0)
       scrapLabel.textContent = `SCRAP ${scrapCollected}/${level.scrapTotal}`;
     else scrapLabel.textContent = "SCRAP none";
-    livesLabel.textContent = `LIVES ${lives}`;
+    livesLabel.textContent = coopMode ? `LIVES ${lives} · CO-OP` : `LIVES ${lives}`;
 
     if (level) {
       levelLabel.textContent = level.isBoss
@@ -1836,13 +2069,18 @@
         : `SECTOR ${level.sector} OF ${SECTOR_COUNT}`;
       const o = level.objective;
       let obj = "";
-      if (o.kind === "collect_exit") obj = `Pick up all ${level.shardTotal} green chips, then reach the exit.`;
+      if (o.kind === "collect_exit")
+        obj = `Pick up all ${level.shardTotal} green chips, then reach the exit.`;
       else if (o.kind === "subset_exit") obj = `You need at least ${o.min} chips before you can leave.`;
       else if (o.kind === "survive_exit")
         obj = `Stay alive ${o.seconds}s until the exit unlocks, then leave.`;
       else if (o.kind === "boss_exit")
         obj = `Space swings the cutter. Every green chip you grab takes a bite out of Cinder. When Cinder falls, head for the door.`;
-      if (weaponMode === "raygun") obj += " Space fires the sidearm (aim follows your last move).";
+      if (coopMode) {
+        obj +=
+          " Co-op: P1 WASD + Space, P2 arrows + Right Shift. Stay close for link bonus chips. Both must reach the exit.";
+      } else if (players[0].weaponMode === "raygun")
+        obj += " Space fires the sidearm (aim follows your last move).";
       objectiveLine.textContent = `Objective: ${obj}`;
     }
   }
@@ -1871,6 +2109,7 @@
 
   function showOverlay() {
     overlay.hidden = false;
+    if (panelCoopHint) panelCoopHint.hidden = !coopMode;
     if (btnStart) btnStart.focus();
     if (state === "paused") {
       panelTitle.textContent = "PAUSED";
@@ -1933,9 +2172,13 @@
       advanceCutscene();
       return;
     }
-    if (e.key === " " && state === "playing") {
+    if (e.code === "Space" && state === "playing") {
       e.preventDefault();
-      tryFireWeapon();
+      tryFireWeapon(0);
+    }
+    if (e.code === "ShiftRight" && coopMode && state === "playing") {
+      e.preventDefault();
+      tryFireWeapon(1);
     }
     if (e.key === "p" || e.key === "P" || e.key === "Escape") {
       if (state === "playing" || state === "paused") {
@@ -1947,6 +2190,7 @@
 
   window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
+    if (e.code === "ShiftLeft" || e.code === "ShiftRight") keys.Shift = false;
   });
 
   btnStart.addEventListener("click", () => {
@@ -2003,7 +2247,7 @@
       }
     } else if (state === "gameover") {
       A.playSfx("ui_confirm");
-      lives = START_LIVES;
+      lives = coopMode ? START_LIVES_COOP : START_LIVES;
       loadLevel(levelIndex);
       state = "playing";
       A.stopMusic();
@@ -2040,7 +2284,8 @@
       showPlayingLayout();
       const sel = homeStartLevel ? parseInt(homeStartLevel.value, 10) : 1;
       const startIdx = clamp(Number.isFinite(sel) ? sel - 1 : 0, 0, LEVELS.length - 1);
-      newRun(startIdx);
+      const coop = homeCoopMode && homeCoopMode.checked;
+      newRun(startIdx, { coop });
 
       const beginPlay = () => {
         showPlayingLayout();
@@ -2068,6 +2313,93 @@
       beginPlay();
     });
   }
+
+  function initTouchControls() {
+    const wrap0 = document.querySelector(".touch-side-p1 .touch-stick-wrap");
+    const wrap1 = document.querySelector(".touch-side-p2 .touch-stick-wrap");
+    const knob0 = document.getElementById("stickKnob0");
+    const knob1 = document.getElementById("stickKnob1");
+
+    function bindStick(pi, wrap, knob) {
+      if (!wrap || !knob) return;
+      function move(ev) {
+        const tp = touchPad[pi];
+        if (!tp.stickActive || tp.pid !== ev.pointerId) return;
+        ev.preventDefault();
+        const r = wrap.getBoundingClientRect();
+        const cx = r.left + r.width * 0.5;
+        const cy = r.top + r.height * 0.5;
+        let dx = ev.clientX - cx;
+        let dy = ev.clientY - cy;
+        const max = Math.min(r.width, r.height) * 0.36;
+        const len = Math.hypot(dx, dy) || 1;
+        if (len > max) {
+          dx = (dx / len) * max;
+          dy = (dy / len) * max;
+        }
+        knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        const m = max || 1;
+        tp.ix = dx / m;
+        tp.iy = dy / m;
+      }
+      function stop(ev) {
+        const tp = touchPad[pi];
+        if (!tp.stickActive || tp.pid !== ev.pointerId) return;
+        tp.stickActive = false;
+        tp.pid = null;
+        tp.ix = 0;
+        tp.iy = 0;
+        knob.style.transform = "";
+        try {
+          wrap.releasePointerCapture(ev.pointerId);
+        } catch (_) {}
+      }
+      wrap.addEventListener(
+        "pointerdown",
+        (ev) => {
+          ev.preventDefault();
+          const tp = touchPad[pi];
+          tp.stickActive = true;
+          tp.pid = ev.pointerId;
+          try {
+            wrap.setPointerCapture(ev.pointerId);
+          } catch (_) {}
+          move(ev);
+        },
+        { passive: false }
+      );
+      wrap.addEventListener("pointermove", move, { passive: false });
+      wrap.addEventListener("pointerup", stop);
+      wrap.addEventListener("pointercancel", stop);
+    }
+
+    bindStick(0, wrap0, knob0);
+    bindStick(1, wrap1, knob1);
+
+    function bindFire(pi, btn) {
+      if (!btn) return;
+      const down = (ev) => {
+        ev.preventDefault();
+        touchPad[pi].firing = true;
+        btn.classList.add("is-held");
+      };
+      const up = () => {
+        touchPad[pi].firing = false;
+        btn.classList.remove("is-held");
+      };
+      btn.addEventListener("pointerdown", down, { passive: false });
+      btn.addEventListener("pointerup", up);
+      btn.addEventListener("pointercancel", up);
+      btn.addEventListener("pointerleave", up);
+    }
+    bindFire(0, document.getElementById("touchFire0"));
+    bindFire(1, document.getElementById("touchFire1"));
+  }
+
+  initTouchControls();
+  window.addEventListener("resize", () => {
+    if (state === "playing") syncTouchLayer();
+  });
 
   initStars();
   level = LEVELS[0];

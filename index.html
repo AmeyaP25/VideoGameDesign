@@ -20,10 +20,11 @@
       <section class="home-howto" aria-labelledby="howtoHeading">
         <h2 id="howtoHeading">How to play</h2>
         <ul class="home-howto-list">
-          <li><kbd>Arrows</kbd> or <kbd>WASD</kbd> to move.</li>
-          <li><kbd>Space</kbd> fires the <strong>sidearm</strong> or swings the boss <strong>cutter</strong> if you’re holding one.</li>
+          <li><strong>Solo:</strong> <kbd>Arrows</kbd> or <kbd>WASD</kbd> to move.</li>
+          <li><strong>Co-op (2 players):</strong> P1 <kbd>WASD</kbd> + <kbd>Space</kbd> to fire; P2 <kbd>Arrow keys</kbd> + <kbd>Right Shift</kbd> to fire. On phones, use the on-screen sticks and fire buttons.</li>
+          <li><kbd>Space</kbd> fires the <strong>sidearm</strong> or swings the boss <strong>cutter</strong> if you’re holding one (solo / P1).</li>
           <li><kbd>P</kbd> or <kbd>Esc</kbd> pauses.</li>
-          <li>Grab enough <strong>chips</strong> (check the HUD), then run for the <strong>exit</strong>.</li>
+          <li>Grab enough <strong>chips</strong> (check the HUD), then run for the <strong>exit</strong>. In co-op, <strong>both players</strong> must stand on the exit together.</li>
           <li><strong>Ice</strong> slides · <strong>&gt;</strong> shove pads · <strong>T/U</strong> teleporters · <strong>C</strong> scrap · <strong>H</strong> extra life · <strong>Z</strong> speed · <strong>R</strong> sidearm pickup</li>
           <li><strong>Sentries</strong> shoot in straight lines, so break line of sight or keep moving.</li>
         </ul>
@@ -87,6 +88,11 @@
         </div>
       </div>
 
+      <label class="home-coop-toggle">
+        <input type="checkbox" id="homeCoopMode" />
+        <span>2-player co-op (shared lives · both reach exit)</span>
+      </label>
+
       <button type="button" id="btnHomePlay" class="btn-home-play">Play</button>
     </div>
   </div>
@@ -106,6 +112,26 @@
     </header>
     <div class="game-stage">
       <canvas id="game" width="320" height="180" tabindex="0" aria-label="Game canvas"></canvas>
+      <div id="touchHud" class="touch-hud" hidden aria-hidden="true">
+        <span class="touch-hud-p1">P1</span>
+        <span class="touch-hud-p2">P2</span>
+      </div>
+      <div id="touchLayer" class="touch-layer" hidden aria-hidden="true">
+        <div class="touch-side touch-side-p1">
+          <div class="touch-stick-wrap" data-player="0">
+            <div class="touch-stick-base" id="stickBase0" aria-hidden="true"></div>
+            <div class="touch-stick-knob" id="stickKnob0" aria-hidden="true"></div>
+          </div>
+          <button type="button" class="touch-fire" id="touchFire0" aria-label="Player 1 fire">◇</button>
+        </div>
+        <div class="touch-side touch-side-p2">
+          <div class="touch-stick-wrap" data-player="1">
+            <div class="touch-stick-base" id="stickBase1" aria-hidden="true"></div>
+            <div class="touch-stick-knob" id="stickKnob1" aria-hidden="true"></div>
+          </div>
+          <button type="button" class="touch-fire" id="touchFire1" aria-label="Player 2 fire">◇</button>
+        </div>
+      </div>
     </div>
     <p id="objectiveLine" class="objective-bar">Objective: …</p>
     <footer class="hud-foot">Shard Circuit · TSA entry</footer>
@@ -139,7 +165,8 @@
       <p id="panelText" class="sub">Move, grab chips, try not to die, get to the exit.</p>
       <p class="controls" id="panelControls">
         Move: <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>WASD</kbd><br />
-        <kbd>Space</kbd>: sidearm or cutter when armed. Pause: <kbd>P</kbd> or <kbd>Esc</kbd>.
+        <kbd>Space</kbd>: sidearm or cutter when armed. Pause: <kbd>P</kbd> or <kbd>Esc</kbd>.<br />
+        <span id="panelCoopHint" hidden>Co-op: P1 <kbd>WASD</kbd> + <kbd>Space</kbd> · P2 arrows + <kbd>Right Shift</kbd> · both stand on exit.</span>
       </p>
       <button type="button" id="btnStart">Continue</button>
     </div>
