@@ -212,6 +212,20 @@
     { ix: 0, iy: 0, firing: false, stickActive: false, cx: 0, cy: 0, pid: null },
     { ix: 0, iy: 0, firing: false, stickActive: false, cx: 0, cy: 0, pid: null },
   ];
+
+  /** Clear stuck keyboard / touch so game-over or menu transitions do not leave movement wedged. */
+  function flushLocalInput() {
+    for (const k in keys) delete keys[k];
+    for (let pi = 0; pi < touchPad.length; pi++) {
+      const tp = touchPad[pi];
+      tp.ix = 0;
+      tp.iy = 0;
+      tp.firing = false;
+      tp.stickActive = false;
+      tp.pid = null;
+    }
+  }
+
   const overlay = document.getElementById("overlay");
   const panelTitle = document.getElementById("panelTitle");
   const panelText = document.getElementById("panelText");
@@ -916,6 +930,8 @@
       netOnline = false;
       netIsHost = false;
     }
+    flushLocalInput();
+    if (netOnline && netIsHost && window.GRPParty && GRPParty.resetRemoteInput) GRPParty.resetRemoteInput();
     lastSyncedNetGs = "";
     score = 0;
     lives = coopMode ? START_LIVES_COOP : START_LIVES;
@@ -1039,6 +1055,12 @@
     A.playSfx("hit");
     addParticles(pl.x + PLAYER_W * 0.5, pl.y + PLAYER_H * 0.5, "#ff3d7f", 12);
     if (lives <= 0) {
+      for (let i = 0; i < plCount(); i++) {
+        players[i].pvx = 0;
+        players[i].pvy = 0;
+      }
+      flushLocalInput();
+      if (netOnline && netIsHost && window.GRPParty && GRPParty.resetRemoteInput) GRPParty.resetRemoteInput();
       state = "gameover";
       A.stopMusic();
       A.playSfx("game_over");
@@ -1190,6 +1212,7 @@
         showOverlay();
         if (btnStart) btnStart.focus();
       }
+      if ((gsn === "gameover" || gsn === "winall") && netOnline && !netIsHost) flushLocalInput();
     }
 
     state = d.gs != null ? d.gs : state;
@@ -1243,13 +1266,18 @@
   }
 
   function update(dt) {
-    if (netOnline && !netIsHost && state === "playing") {
+    /** Client joiner: always send input to host so P2 does not keep last direction after game over / pause. */
+    if (netOnline && !netIsHost) {
       const P = window.GRPParty;
       if (P) {
-        const km = keyboardMove(1);
-        const m = mergeMove(1, km.ix, km.iy);
-        const fire = touchPad[1].firing || !!keys.ShiftRight;
-        P.sendInput(m.ix, m.iy, fire);
+        if (state === "playing") {
+          const km = keyboardMove(1);
+          const m = mergeMove(1, km.ix, km.iy);
+          const fire = touchPad[1].firing || !!keys.ShiftRight;
+          P.sendInput(m.ix, m.iy, fire);
+        } else {
+          P.sendInput(0, 0, false);
+        }
         const st = P.consumePendingState();
         if (st) applyNetGameState(st);
       }
@@ -2653,6 +2681,8 @@
     } else if (state === "gameover") {
       if (netOnline && !netIsHost) return;
       A.playSfx("ui_confirm");
+      flushLocalInput();
+      if (netOnline && netIsHost && window.GRPParty && GRPParty.resetRemoteInput) GRPParty.resetRemoteInput();
       lives = coopMode ? START_LIVES_COOP : START_LIVES;
       loadLevel(levelIndex);
       state = "playing";
@@ -2663,6 +2693,7 @@
       A.playSfx("ui_confirm");
       hideOverlay();
       if (window.GRPParty && GRPParty.leaveParty) GRPParty.leaveParty();
+      flushLocalInput();
       netOnline = false;
       netIsHost = false;
       if (Home) Home.start();

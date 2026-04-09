@@ -164,11 +164,18 @@ export async function joinParty(code) {
   });
 }
 
+export function resetRemoteInput() {
+  remoteInput.ix = 0;
+  remoteInput.iy = 0;
+  remoteInput.fire = false;
+}
+
 export async function leaveParty() {
   pendingState = null;
   peerPresent = false;
   subscribed = false;
   window.__netPartnerName = "";
+  resetRemoteInput();
   if (channel && supabase) {
     try {
       await supabase.removeChannel(channel);
@@ -239,6 +246,7 @@ window.GRPParty = {
   createParty,
   joinParty,
   leaveParty,
+  resetRemoteInput,
   send,
   broadcastGameStart,
   broadcastNextLevel,
