@@ -535,17 +535,22 @@ html, body {
 }
 
 .btn-cutscene {
+  font-family: var(--cutscene-font);
   background: var(--accent2);
   color: #0a0508;
-  border: none;
-  padding: 0.65rem 1.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  border: 3px solid #ff6b9d;
+  padding: 0.55rem 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   cursor: pointer;
-  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  font-size: clamp(1rem, 2.6vw, 1.2rem);
   text-transform: uppercase;
-  border-radius: 3px;
-  box-shadow: 0 0 20px rgba(255, 61, 127, 0.35);
+  border-radius: 2px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.25),
+    3px 3px 0 #180810,
+    0 0 18px rgba(255, 61, 127, 0.4);
 }
 
 .btn-cutscene:hover {
@@ -666,14 +671,6 @@ kbd {
   margin: 0;
   text-align: center;
   box-sizing: border-box;
-}
-
-.home-kicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 
 .home-title {
@@ -1036,8 +1033,9 @@ kbd {
   display: none !important;
 }
 
-/* Cinematic cutscenes */
+/* Cinematic cutscenes — 16/32-bit style UI (VT323: readable pixel-adjacent type) */
 .cutscene-cinematic {
+  --cutscene-font: "VT323", ui-monospace, monospace;
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -1047,7 +1045,11 @@ kbd {
   justify-content: flex-end;
   padding: 0;
   padding-bottom: clamp(0.65rem, 2vh, 1.25rem);
-  background: linear-gradient(165deg, #030308 0%, #0c0820 35%, #06040e 100%);
+  font-family: var(--cutscene-font);
+  -webkit-font-smoothing: antialiased;
+  background: linear-gradient(165deg, #020208 0%, #0a0618 38%, #05040c 100%);
+  background-color: #04040a;
+  image-rendering: pixelated;
 }
 
 .cutscene-cinematic[hidden] {
@@ -1060,6 +1062,8 @@ kbd {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .cutscene-vignette {
@@ -1103,11 +1107,16 @@ kbd {
   z-index: 4;
   margin: 0;
   text-align: center;
-  font-size: clamp(0.58rem, 1.6vw, 0.72rem);
-  letter-spacing: 0.42em;
-  color: var(--muted);
+  font-family: var(--cutscene-font);
+  font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+  letter-spacing: 0.28em;
+  color: #a8b8d8;
   text-transform: uppercase;
   pointer-events: none;
+  text-shadow:
+    0 1px 0 #000008,
+    0 2px 0 #080810,
+    2px 2px 0 #080810;
 }
 
 .cutscene-characters {
@@ -1188,35 +1197,85 @@ kbd {
   width: 100%;
   max-width: none;
   margin: 0 clamp(0.5rem, 2vw, 1rem);
-  background: linear-gradient(180deg, rgba(10, 10, 18, 0.97) 0%, rgba(6, 6, 14, 0.99) 100%);
-  border: 2px solid #2a3550;
-  border-radius: 4px;
-  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem) 0.65rem;
-  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-family: var(--cutscene-font);
+  background-color: #0a0a14;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  border: 4px solid #4a5a78;
+  border-radius: 2px;
+  padding: clamp(0.85rem, 2.2vw, 1.1rem) clamp(1rem, 3vw, 1.5rem) 0.7rem;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.07),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.45),
+    0 -8px 40px rgba(0, 0, 0, 0.65),
+    4px 4px 0 #080810;
+  overflow: hidden;
+}
+
+.cutscene-dialogue::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.45) 2px,
+    rgba(0, 0, 0, 0.45) 3px
+  );
+  mix-blend-mode: multiply;
 }
 
 .dialogue-nameplate {
-  font-size: clamp(0.65rem, 1.8vw, 0.75rem);
-  letter-spacing: 0.22em;
-  font-weight: 800;
-  margin-bottom: 0.45rem;
+  position: relative;
+  z-index: 1;
+  font-family: var(--cutscene-font);
+  font-size: clamp(1rem, 2.6vw, 1.2rem);
+  letter-spacing: 0.18em;
+  font-weight: 400;
+  margin-bottom: 0.4rem;
   color: var(--accent);
+  text-shadow:
+    0 1px 0 #00040a,
+    1px 2px 0 #080810,
+    -1px -1px 0 #002820;
 }
 
 .dialogue-body {
+  position: relative;
+  z-index: 1;
   margin: 0;
-  font-size: clamp(0.88rem, 2.3vw, 1.05rem);
-  line-height: 1.55;
-  color: #e4e4f0;
-  min-height: 3.2em;
+  font-family: var(--cutscene-font);
+  font-size: clamp(1.12rem, 3.2vw, 1.48rem);
+  line-height: 1.38;
+  letter-spacing: 0.02em;
+  color: #eef0ff;
+  min-height: 3.1em;
+  text-shadow:
+    0 1px 0 #080810,
+    1px 1px 0 #080810,
+    2px 2px 0 #040408,
+    -1px -1px 0 #182038;
 }
 
 .dialogue-hint {
+  position: relative;
+  z-index: 1;
   margin: 0.55rem 0 0;
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  color: var(--muted);
+  font-family: var(--cutscene-font);
+  font-size: clamp(0.78rem, 2vw, 0.92rem);
+  letter-spacing: 0.1em;
+  color: #9aa4c0;
   text-transform: uppercase;
+  text-shadow: 0 1px 0 #080810;
 }
 
 .dialogue-arrow {

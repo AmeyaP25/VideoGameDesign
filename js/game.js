@@ -569,6 +569,7 @@
     cutsceneFx.width = Math.floor(rw * dpr);
     cutsceneFx.height = Math.floor(rh * dpr);
     cutsceneFxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cutsceneFxCtx.imageSmoothingEnabled = false;
   }
 
   function syncCutscenePortraitBitmapSizes(layout) {
@@ -610,6 +611,7 @@
     f.clearRect(0, 0, cutsceneFx.width, cutsceneFx.height);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     f.setTransform(dpr, 0, 0, dpr, 0, 0);
+    f.imageSmoothingEnabled = false;
     if (mood === "threat") {
       f.fillStyle = `rgba(80,0,30,${0.08 + Math.sin(cutsceneTime * 2) * 0.04})`;
       f.fillRect(0, 0, W, H);
