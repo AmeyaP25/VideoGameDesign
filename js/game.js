@@ -80,6 +80,13 @@
   }
   let players = [newPlayerBody(), newPlayerBody()];
   let coopMode = false;
+  /** Supabase online co-op: host simulates; joiner sends P2 input + applies snapshots. */
+  let netOnline = false;
+  let netIsHost = false;
+  let netSendAccum = 0;
+  let lastSyncedNetGs = "";
+  let playerNames = ["Juno", "Kai"];
+
   let spawnPts = [
     { x: 0, y: 0 },
     { x: 0, y: 0 },
@@ -103,7 +110,7 @@
   let comboTimer = 0;
   let shake = 0;
 
-  let lastMusicSector = 0;
+  let lastMusicLevelId = 0;
 
   const keys = Object.create(null);
   const touchPad = [
@@ -236,6 +243,13 @@
       if (keys.w || keys.W) iy -= 1;
       if (keys.s || keys.S) iy += 1;
     } else {
+      if (netOnline && netIsHost && window.GRPParty) {
+        const r = GRPParty.getRemoteInput();
+        const rx = r.ix || 0;
+        const ry = r.iy || 0;
+        const len = Math.hypot(rx, ry) || 1;
+        return { ix: rx / len, iy: ry / len };
+      }
       if (keys.ArrowLeft) ix -= 1;
       if (keys.ArrowRight) ix += 1;
       if (keys.ArrowUp) iy -= 1;
@@ -357,6 +371,46 @@
     let y = py + dy;
     if (overlapSolid(x, y, pw, ph)) y = py;
     return { x, y };
+  }
+
+  /**
+   * If the player AABB overlaps solid tiles (e.g. a gate just closed on them),
+   * moveAndCollide cannot escape. Snap to the nearest free position inside the level.
+   */
+  function depenetratePlayer(pi) {
+    const pl = players[pi];
+    if (!level || !overlapSolid(pl.x, pl.y, PLAYER_W, PLAYER_H)) return;
+    const ox = pl.x;
+    const oy = pl.y;
+    let bestX = ox;
+    let bestY = oy;
+    let bestCost = Infinity;
+    const R = 24;
+    for (let dy = -R; dy <= R; dy += 2) {
+      for (let dx = -R; dx <= R; dx += 2) {
+        const nx = clamp(ox + dx, 0, W - PLAYER_W);
+        const ny = clamp(oy + dy, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
+        if (!overlapSolid(nx, ny, PLAYER_W, PLAYER_H)) {
+          const c = dx * dx + dy * dy;
+          if (c < bestCost) {
+            bestCost = c;
+            bestX = nx;
+            bestY = ny;
+          }
+        }
+      }
+    }
+    if (bestCost < Infinity) {
+      pl.x = bestX;
+      pl.y = bestY;
+      pl.pvx = 0;
+      pl.pvy = 0;
+      return;
+    }
+    pl.x = spawnPts[pi].x;
+    pl.y = spawnPts[pi].y;
+    pl.pvx = 0;
+    pl.pvy = 0;
   }
 
   function initStars() {
@@ -671,6 +725,9 @@
       spawnPts[0].y = base.y;
     }
 
+    const npcSpawn = coopMode ? 2 : 1;
+    for (let si = 0; si < npcSpawn; si++) depenetratePlayer(si);
+
     enemies.length = 0;
     for (const e of level.enemies) {
       if (e.type === "patrol") {
@@ -757,6 +814,14 @@
 
   function newRun(startLevelIdx, opts) {
     coopMode = !!(opts && opts.coop);
+    if (opts && opts.online != null) {
+      netOnline = !!opts.online;
+      netIsHost = !!opts.host;
+    } else {
+      netOnline = false;
+      netIsHost = false;
+    }
+    lastSyncedNetGs = "";
     score = 0;
     lives = coopMode ? START_LIVES_COOP : START_LIVES;
     const idx = clamp(
@@ -766,7 +831,7 @@
     );
     levelIndex = idx;
     loadLevel(idx);
-    lastMusicSector = level.sector;
+    lastMusicLevelId = level.id;
   }
 
   function shardsRequired() {
@@ -883,6 +948,7 @@
       A.stopMusic();
       A.playSfx("game_over");
       showOverlay();
+      netBroadcastSnapshot();
       return;
     }
     pl.x = spawnPts[pi].x;
@@ -900,6 +966,13 @@
 
     if (levelIndex >= LEVELS.length - 1) {
       A.stopMusic();
+      if (netOnline && netIsHost) {
+        state = "winall";
+        A.playSfx("win_game");
+        showOverlay();
+        netBroadcastSnapshot();
+        return;
+      }
       beginCutscene(
         Story ? Story.getOutro() : [],
         () => {
@@ -913,6 +986,12 @@
     }
 
     A.playSfx("transition");
+    if (netOnline && netIsHost) {
+      state = "interstitial";
+      showOverlay();
+      netBroadcastSnapshot();
+      return;
+    }
     const mid = Story && Story.getAfterLevel(levelIndex);
     if (mid && mid.length) {
       beginCutscene(
@@ -929,7 +1008,161 @@
     }
   }
 
+  function serializeEnemyForNet(e) {
+    const t = e.type;
+    if (t === "patrol")
+      return { t, x: e.x, y: e.y, w: e.w, h: e.h, vx: e.vx, vy: e.vy, axis: e.axis, spd: e.spd };
+    if (t === "pursuer" || t === "titan") return { t, x: e.x, y: e.y, w: e.w, h: e.h, spd: e.spd };
+    if (t === "sentry") return { t, x: e.x, y: e.y, w: e.w, h: e.h, period: e.period, timer: e.timer };
+    if (t === "boss")
+      return {
+        t,
+        x: e.x,
+        y: e.y,
+        w: e.w,
+        h: e.h,
+        hp: e.hp,
+        maxHp: e.maxHp,
+        dead: e.dead,
+        spd: e.spd,
+        burstTimer: e.burstTimer,
+      };
+    return { t, x: e.x, y: e.y, w: e.w, h: e.h };
+  }
+
+  function buildNetGameState() {
+    const pls = players.map((pl) => ({
+      x: pl.x,
+      y: pl.y,
+      pvx: pl.pvx,
+      pvy: pl.pvy,
+      lastAimX: pl.lastAimX,
+      lastAimY: pl.lastAimY,
+      invuln: pl.invuln,
+      hazardCd: pl.hazardCd,
+      weaponCd: pl.weaponCd,
+      weaponMode: pl.weaponMode,
+      speedBoostTimer: pl.speedBoostTimer,
+      teleportCd: pl.teleportCd,
+    }));
+    return {
+      gs: state,
+      li: levelIndex,
+      lt: levelTime,
+      lf: lastGateFlip,
+      sc: score,
+      lives,
+      cb: combo,
+      ct: comboTimer,
+      shr: shardsCollected,
+      scrapN: scrapCollected,
+      shake,
+      pl: pls,
+      sp: spawnPts.map((p) => ({ x: p.x, y: p.y })),
+      e: enemies.map(serializeEnemyForNet),
+      pr: projectiles.map((b) => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, life: b.life })),
+      ps: playerShots.map((p) => ({
+        x: p.x,
+        y: p.y,
+        vx: p.vx,
+        vy: p.vy,
+        life: p.life,
+        kind: p.kind,
+        w: p.w,
+        h: p.h,
+        owner: p.owner,
+      })),
+      sh: shards.map((s) => (s.taken ? 1 : 0)),
+      scp: scraps.map((s) => (s.taken ? 1 : 0)),
+      pu: powerups.map((p) => (p.taken ? 1 : 0)),
+      trail: trail.map((t) => t.map((tr) => ({ x: tr.x, y: tr.y, t: tr.t }))),
+    };
+  }
+
+  function applyNetGameState(d) {
+    if (!d) return;
+    if (typeof d.li === "number" && d.li !== levelIndex && d.gs === "playing") {
+      loadLevel(d.li);
+    }
+    if (!level) return;
+
+    const gsn = d.gs;
+    if (gsn && gsn !== lastSyncedNetGs) {
+      lastSyncedNetGs = gsn;
+      if (gsn === "gameover") A.stopMusic();
+      if (gsn === "winall") A.stopMusic();
+      if (gsn === "interstitial" || gsn === "gameover" || gsn === "winall" || gsn === "paused") {
+        showOverlay();
+        if (btnStart) btnStart.focus();
+      }
+    }
+
+    state = d.gs != null ? d.gs : state;
+    levelTime = d.lt != null ? d.lt : levelTime;
+    lastGateFlip = d.lf != null ? d.lf : lastGateFlip;
+    score = d.sc != null ? d.sc : score;
+    lives = d.lives != null ? d.lives : lives;
+    combo = d.cb != null ? d.cb : combo;
+    comboTimer = d.ct != null ? d.ct : comboTimer;
+    shardsCollected = d.shr != null ? d.shr : shardsCollected;
+    scrapCollected = d.scrapN != null ? d.scrapN : scrapCollected;
+    shake = d.shake != null ? d.shake : shake;
+
+    if (d.pl && d.pl.length >= 2) {
+      for (let i = 0; i < 2; i++) {
+        Object.assign(players[i], d.pl[i]);
+      }
+    }
+    if (d.sp && d.sp.length >= 2) {
+      spawnPts[0].x = d.sp[0].x;
+      spawnPts[0].y = d.sp[0].y;
+      spawnPts[1].x = d.sp[1].x;
+      spawnPts[1].y = d.sp[1].y;
+    }
+    if (d.e) enemies = d.e.map((o) => Object.assign({}, o));
+    if (d.pr) projectiles = d.pr.map((o) => Object.assign({}, o));
+    if (d.ps)
+      playerShots = d.ps.map((o) =>
+        Object.assign({ kind: "ray", owner: 0 }, o)
+      );
+    if (d.sh && shards.length === d.sh.length) {
+      for (let i = 0; i < shards.length; i++) shards[i].taken = !!d.sh[i];
+    }
+    if (d.scp && scraps.length === d.scp.length) {
+      for (let i = 0; i < scraps.length; i++) scraps[i].taken = !!d.scp[i];
+    }
+    if (d.pu && powerups.length === d.pu.length) {
+      for (let i = 0; i < powerups.length; i++) powerups[i].taken = !!d.pu[i];
+    }
+    if (d.trail && d.trail.length >= 2) {
+      trail[0] = d.trail[0].map((tr) => Object.assign({}, tr));
+      trail[1] = d.trail[1].map((tr) => Object.assign({}, tr));
+    }
+  }
+
+  function netBroadcastSnapshot() {
+    if (!netOnline || !netIsHost || !window.GRPParty) return;
+    try {
+      GRPParty.sendState(buildNetGameState());
+    } catch (_) {}
+  }
+
   function update(dt) {
+    if (netOnline && !netIsHost && state === "playing") {
+      const P = window.GRPParty;
+      if (P) {
+        const km = keyboardMove(1);
+        const m = mergeMove(1, km.ix, km.iy);
+        const fire = touchPad[1].firing || !!keys.ShiftRight;
+        P.sendInput(m.ix, m.iy, fire);
+        const st = P.consumePendingState();
+        if (st) applyNetGameState(st);
+      }
+      shake = Math.max(0, shake - dt);
+      syncTouchLayer();
+      return;
+    }
+
     if (state !== "playing") return;
 
     levelTime += dt;
@@ -986,8 +1219,11 @@
 
     if (coopMode) resolvePlayerOverlap();
 
+    for (let pi = 0; pi < n; pi++) depenetratePlayer(pi);
+
     if (touchPad[0].firing) tryFireWeapon(0);
-    if (coopMode && touchPad[1].firing) tryFireWeapon(1);
+    if (netOnline && netIsHost && window.GRPParty && GRPParty.getRemoteInput().fire) tryFireWeapon(1);
+    else if (coopMode && touchPad[1].firing) tryFireWeapon(1);
 
     for (let pi = 0; pi < n; pi++) {
       const pl = players[pi];
@@ -1337,6 +1573,15 @@
     }
 
     shake = Math.max(0, shake - dt);
+
+    if (netOnline && netIsHost) {
+      netSendAccum += dt;
+      if (netSendAccum >= 0.055) {
+        netSendAccum = 0;
+        netBroadcastSnapshot();
+      }
+    }
+
     syncTouchLayer();
   }
 
@@ -1965,6 +2210,12 @@
     drawExtras(0, 0, 1, 1);
     drawFace(0, 0, faceHi, "#0a2820");
     drawSuitDetail(0, 0, stripeCol, "#0a2820");
+    const nm = playerNames && playerNames[pi] ? String(playerNames[pi]).slice(0, 14) : "";
+    if (nm) {
+      ctx.font = "5px monospace";
+      ctx.fillStyle = pi === 0 ? "rgba(0,255,200,0.92)" : "rgba(255,160,210,0.95)";
+      ctx.fillText(nm, px, py - 2);
+    }
     if (pl.weaponMode === "raygun") {
       const fx = pl.lastAimX >= 0 ? px + PLAYER_W - 2 : px - 3;
       ctx.fillStyle = "#2a3840";
@@ -2058,7 +2309,15 @@
     if (level && (level.scrapTotal || 0) > 0)
       scrapLabel.textContent = `SCRAP ${scrapCollected}/${level.scrapTotal}`;
     else scrapLabel.textContent = "SCRAP none";
-    livesLabel.textContent = coopMode ? `LIVES ${lives} · CO-OP` : `LIVES ${lives}`;
+    const nameHud =
+      coopMode && playerNames[0] && playerNames[1]
+        ? `${playerNames[0].slice(0, 10)} · ${playerNames[1].slice(0, 10)}`
+        : "";
+    livesLabel.textContent = coopMode
+      ? nameHud
+        ? `LIVES ${lives} · ${nameHud}`
+        : `LIVES ${lives} · CO-OP`
+      : `LIVES ${lives}`;
 
     if (level) {
       levelLabel.textContent = level.isBoss
@@ -2117,18 +2376,32 @@
       btnStart.textContent = "Resume";
     } else if (state === "interstitial") {
       const nextLv = LEVELS[levelIndex + 1];
-      if (nextLv && nextLv.isBoss) {
-        panelTitle.textContent = "LAST ROOM";
-        panelText.textContent = `Score ${score}. Up next: ${nextLv.name}.`;
-        btnStart.textContent = "Enter core";
+      if (netOnline && !netIsHost) {
+        if (btnStart) btnStart.disabled = true;
+        panelTitle.textContent = "SECTOR CLEAR";
+        panelText.textContent = `Score ${score}. Waiting for the host to start the next level.`;
+        btnStart.textContent = "…";
       } else {
-        panelTitle.textContent = `SECTOR ${level.sector} OF ${SECTOR_COUNT} CLEAR`;
-        panelText.textContent = `Score: ${score}. Next: ${nextLv ? nextLv.name : "n/a"}`;
-        btnStart.textContent = "Next Level";
+        if (btnStart) btnStart.disabled = false;
+        if (nextLv && nextLv.isBoss) {
+          panelTitle.textContent = "LAST ROOM";
+          panelText.textContent = `Score ${score}. Up next: ${nextLv.name}.`;
+          btnStart.textContent = "Enter core";
+        } else {
+          panelTitle.textContent = `SECTOR ${level.sector} OF ${SECTOR_COUNT} CLEAR`;
+          panelText.textContent = `Score: ${score}. Next: ${nextLv ? nextLv.name : "n/a"}`;
+          btnStart.textContent = "Next Level";
+        }
       }
     } else if (state === "gameover") {
+      if (netOnline && !netIsHost) {
+        if (btnStart) btnStart.disabled = true;
+        panelText.textContent = `Out of lives. Score: ${score}. Only the host can retry or return home.`;
+      } else {
+        if (btnStart) btnStart.disabled = false;
+        panelText.textContent = `Out of lives. Score: ${score}. Retry ${level.name}?`;
+      }
       panelTitle.textContent = "GAME OVER";
-      panelText.textContent = `Out of lives. Score: ${score}. Retry ${level.name}?`;
       btnStart.textContent = "Retry Level";
     } else if (state === "winall") {
       panelTitle.textContent = "SHARD CIRCUIT CLEAR";
@@ -2143,6 +2416,7 @@
   }
 
   function togglePause() {
+    if (netOnline && !netIsHost) return;
     if (
       state === "title" ||
       state === "winall" ||
@@ -2156,17 +2430,20 @@
       A.setPaused(true);
       A.playSfx("pause_in");
       showOverlay();
+      netBroadcastSnapshot();
     } else if (state === "paused") {
       state = "playing";
       A.setPaused(false);
       A.playSfx("pause_out");
       hideOverlay();
       lastT = 0;
+      netBroadcastSnapshot();
     }
   }
 
   window.addEventListener("keydown", (e) => {
     keys[e.key] = true;
+    if (e.code === "ShiftRight") keys.ShiftRight = true;
     if (state === "cutscene" && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       advanceCutscene();
@@ -2174,11 +2451,12 @@
     }
     if (e.code === "Space" && state === "playing") {
       e.preventDefault();
-      tryFireWeapon(0);
+      if (netOnline && !netIsHost) tryFireWeapon(1);
+      else tryFireWeapon(0);
     }
     if (e.code === "ShiftRight" && coopMode && state === "playing") {
       e.preventDefault();
-      tryFireWeapon(1);
+      if (!(netOnline && !netIsHost)) tryFireWeapon(1);
     }
     if (e.key === "p" || e.key === "P" || e.key === "Escape") {
       if (state === "playing" || state === "paused") {
@@ -2191,6 +2469,7 @@
   window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
     if (e.code === "ShiftLeft" || e.code === "ShiftRight") keys.Shift = false;
+    if (e.code === "ShiftRight") keys.ShiftRight = false;
   });
 
   btnStart.addEventListener("click", () => {
@@ -2203,7 +2482,9 @@
       A.setPaused(false);
       hideOverlay();
     } else if (state === "interstitial") {
+      if (netOnline && !netIsHost) return;
       A.playSfx("ui_confirm");
+      if (netOnline && netIsHost && window.GRPParty) GRPParty.broadcastNextLevel();
       const completedSector = level.sector;
       levelIndex++;
       const nextLv = LEVELS[levelIndex];
@@ -2213,10 +2494,10 @@
         showPlayingLayout();
         loadLevel(levelIndex);
         state = "playing";
-        if (level.sector !== lastMusicSector) {
-          lastMusicSector = level.sector;
+        if (level.id !== lastMusicLevelId) {
+          lastMusicLevelId = level.id;
           A.stopMusic();
-          A.startGameMusic(level.sector);
+          A.startGameMusic(level.id);
         }
         lastT = 0;
         if (canvas && typeof canvas.focus === "function") {
@@ -2230,7 +2511,7 @@
 
       let midSlides = null;
       let chapter = "STORY";
-      if (Story && nextLv) {
+      if (Story && nextLv && !netOnline) {
         if (nextLv.isBoss && typeof Story.getBossApproach === "function") {
           midSlides = Story.getBossApproach();
           chapter = "CORE";
@@ -2246,16 +2527,20 @@
         startNextLevel();
       }
     } else if (state === "gameover") {
+      if (netOnline && !netIsHost) return;
       A.playSfx("ui_confirm");
       lives = coopMode ? START_LIVES_COOP : START_LIVES;
       loadLevel(levelIndex);
       state = "playing";
       A.stopMusic();
-      A.startGameMusic(level.sector);
+      A.startGameMusic(level.id);
       hideOverlay();
     } else if (state === "winall") {
       A.playSfx("ui_confirm");
       hideOverlay();
+      if (window.GRPParty && GRPParty.leaveParty) GRPParty.leaveParty();
+      netOnline = false;
+      netIsHost = false;
       if (Home) Home.start();
       if (homeScreen) homeScreen.hidden = false;
       if (gameWrap) gameWrap.hidden = true;
@@ -2290,9 +2575,9 @@
       const beginPlay = () => {
         showPlayingLayout();
         state = "playing";
-        lastMusicSector = level.sector;
+        lastMusicLevelId = level.id;
         A.stopMusic();
-        A.startGameMusic(level.sector);
+        A.startGameMusic(level.id);
         lastT = 0;
         if (canvas && typeof canvas.focus === "function") {
           try {
@@ -2312,6 +2597,162 @@
       }
       beginPlay();
     });
+  }
+
+  function initOnlineUI() {
+    const note = document.getElementById("netConfigNote");
+    const P = window.GRPParty;
+    if (note && P && P.netConfigured()) note.style.display = "none";
+
+    const dn = document.getElementById("netDisplayName");
+    if (dn) {
+      try {
+        dn.value = localStorage.getItem("shard_net_display") || "";
+      } catch (_) {}
+      dn.addEventListener("change", () => {
+        try {
+          localStorage.setItem("shard_net_display", dn.value.slice(0, 16));
+        } catch (_) {}
+      });
+    }
+
+    if (P && P.setHandlers) {
+      P.setHandlers({
+        onPeer() {
+          const st = document.getElementById("netPartyStatus");
+          const go = document.getElementById("btnOnlineGo");
+          if (st) st.textContent = "Partner joined. Choose a stage, then Start online game.";
+          if (go) go.hidden = false;
+        },
+        onStart({ levelIndex: lv }) {
+          if (P.getIsHost()) return;
+          const idx = clamp(lv | 0, 0, LEVELS.length - 1);
+          const el = document.getElementById("netDisplayName");
+          const myName = (el && el.value.trim()) || "Guest";
+          window.__netDisplayName = myName.slice(0, 16);
+          playerNames[1] = window.__netDisplayName;
+          playerNames[0] = (window.__netPartnerName || "Host").slice(0, 16);
+          newRun(idx, { coop: true, online: true, host: false });
+          if (Home) Home.stop();
+          showPlayingLayout();
+          if (homeScreen) {
+            homeScreen.hidden = true;
+            homeScreen.setAttribute("aria-hidden", "true");
+          }
+          if (gameWrap) gameWrap.hidden = false;
+          state = "playing";
+          lastMusicLevelId = level.id;
+          A.stopMusic();
+          A.startGameMusic(level.id);
+          lastT = 0;
+          lastSyncedNetGs = "";
+          try {
+            canvas.focus({ preventScroll: true });
+          } catch (_) {
+            canvas.focus();
+          }
+        },
+        onNextLevel() {
+          if (!P.getIsHost()) {
+            if (state !== "interstitial") return;
+            A.playSfx("ui_confirm");
+            showPlayingLayout();
+            levelIndex++;
+            loadLevel(levelIndex);
+            state = "playing";
+            hideOverlay();
+            if (btnStart) btnStart.disabled = false;
+            lastMusicLevelId = level.id;
+            A.stopMusic();
+            A.startGameMusic(level.id);
+            lastT = 0;
+            lastSyncedNetGs = "";
+            try {
+              canvas.focus({ preventScroll: true });
+            } catch (_) {
+              canvas.focus();
+            }
+          }
+        },
+      });
+    }
+
+    const btnCreate = document.getElementById("btnNetCreate");
+    const btnJoin = document.getElementById("btnNetJoin");
+    const btnGo = document.getElementById("btnOnlineGo");
+    if (btnCreate && window.GRPParty) {
+      btnCreate.addEventListener("click", async () => {
+        try {
+          if (!GRPParty.netConfigured()) {
+            alert("Add NETPLAY_SUPABASE_URL and NETPLAY_SUPABASE_ANON_KEY in js/netconfig.js");
+            return;
+          }
+          const elDn = document.getElementById("netDisplayName");
+          window.__netDisplayName = ((elDn && elDn.value.trim()) || "Host").slice(0, 16);
+          await GRPParty.createParty();
+          const line = document.getElementById("netPartyCodeLine");
+          const show = document.getElementById("netPartyCodeShow");
+          const st = document.getElementById("netPartyStatus");
+          if (show) show.textContent = GRPParty.getPartyCode();
+          if (line) line.hidden = false;
+          if (st) st.textContent = "Waiting for a friend to join with this code…";
+        } catch (err) {
+          alert(err && err.message ? err.message : "Could not create party.");
+        }
+      });
+    }
+    if (btnJoin && window.GRPParty) {
+      btnJoin.addEventListener("click", async () => {
+        const inp = document.getElementById("netJoinCode");
+        const st = document.getElementById("netPartyStatus");
+        try {
+          if (!GRPParty.netConfigured()) {
+            alert("Add NETPLAY_SUPABASE_URL and NETPLAY_SUPABASE_ANON_KEY in js/netconfig.js");
+            return;
+          }
+          const elDn = document.getElementById("netDisplayName");
+          window.__netDisplayName = ((elDn && elDn.value.trim()) || "Guest").slice(0, 16);
+          await GRPParty.joinParty(inp && inp.value);
+          if (st) st.textContent = "Connected. Waiting for the host to start…";
+        } catch (err) {
+          alert(err && err.message ? err.message : "Could not join.");
+        }
+      });
+    }
+    if (btnGo && window.GRPParty) {
+      btnGo.addEventListener("click", () => {
+        if (!GRPParty.isPeerPresent()) {
+          alert("Wait until your friend has joined.");
+          return;
+        }
+        const el = document.getElementById("netDisplayName");
+        const nm = (el && el.value.trim()) || "Host";
+        window.__netDisplayName = nm.slice(0, 16);
+        playerNames[0] = window.__netDisplayName;
+        playerNames[1] = (window.__netPartnerName || "Partner").slice(0, 16);
+        const sel = homeStartLevel ? parseInt(homeStartLevel.value, 10) : 1;
+        const startIdx = clamp(Number.isFinite(sel) ? sel - 1 : 0, 0, LEVELS.length - 1);
+        newRun(startIdx, { coop: true, online: true, host: true });
+        GRPParty.broadcastGameStart(startIdx);
+        if (Home) Home.stop();
+        showPlayingLayout();
+        if (homeScreen) {
+          homeScreen.hidden = true;
+          homeScreen.setAttribute("aria-hidden", "true");
+        }
+        if (gameWrap) gameWrap.hidden = false;
+        state = "playing";
+        lastMusicLevelId = level.id;
+        A.stopMusic();
+        A.startGameMusic(level.id);
+        lastT = 0;
+        try {
+          canvas.focus({ preventScroll: true });
+        } catch (_) {
+          canvas.focus();
+        }
+      });
+    }
   }
 
   function initTouchControls() {
@@ -2397,6 +2838,7 @@
   }
 
   initTouchControls();
+  initOnlineUI();
   window.addEventListener("resize", () => {
     if (state === "playing") syncTouchLayer();
   });

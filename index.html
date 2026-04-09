@@ -93,6 +93,27 @@
         <span>2-player co-op (shared lives · both reach exit)</span>
       </label>
 
+      <section class="home-online" id="homeOnline" aria-labelledby="onlineHeading">
+        <h2 id="onlineHeading" class="home-online-title">Play online (2 players)</h2>
+        <p class="home-online-note" id="netConfigNote">
+          Add your Supabase URL and anon key in <code>js/netconfig.js</code> (free tier). Realtime must be enabled for your project.
+        </p>
+        <div class="home-online-row">
+          <label class="home-online-label" for="netDisplayName">Your name</label>
+          <input type="text" id="netDisplayName" class="home-online-input" maxlength="16" placeholder="Pilot name" autocomplete="nickname" />
+        </div>
+        <div class="home-online-actions">
+          <button type="button" class="btn-online" id="btnNetCreate">Create party</button>
+          <input type="text" id="netJoinCode" class="home-online-code-input" maxlength="8" placeholder="CODE" aria-label="Party code to join" />
+          <button type="button" class="btn-online" id="btnNetJoin">Join party</button>
+        </div>
+        <p class="home-online-status" id="netPartyStatus"></p>
+        <p class="home-online-code-line" id="netPartyCodeLine" hidden>
+          Party code: <strong id="netPartyCodeShow"></strong> — share with your friend.
+        </p>
+        <button type="button" class="btn-home-play btn-online-go" id="btnOnlineGo" hidden>Start online game</button>
+      </section>
+
       <button type="button" id="btnHomePlay" class="btn-home-play">Play</button>
     </div>
   </div>
@@ -171,6 +192,8 @@
       <button type="button" id="btnStart">Continue</button>
     </div>
   </div>
+  <script src="js/netconfig.js"></script>
+  <script type="module" src="js/party.mjs"></script>
   <script src="js/audio.js"></script>
   <script src="js/story.js"></script>
   <script src="js/cutscene-voice.js"></script>

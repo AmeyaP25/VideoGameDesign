@@ -1,6 +1,9 @@
 /**
  * Shard Circuit: procedural Web Audio (BGM + SFX). Works on HTTPS (e.g. Vercel) after a user gesture.
  * Global: window.GRPAudio
+ *
+ * All level/title music is synthesized here (oscillators + noise). It is not a recording of
+ * third-party music — nothing to license, attribute, or cite for soundtrack use.
  */
 (function () {
   "use strict";
@@ -13,7 +16,6 @@
   let sfxGain = null;
 
   let musicMode = "off";
-  let sectorTag = "s1";
   let pausedMusic = false;
   /** Last UI volume 0 to 1 (no sliders; fixed defaults, still correct after pause). */
   let lastMusic01 = 0.7;
@@ -21,12 +23,109 @@
   let stepIndex = 0;
   let nextNoteTime = 0;
   let activeOscs = [];
+  /** Which level theme (1–6) is active during gameplay BGM. */
+  let gameLevelId = 1;
 
   const TITLE_BPM = 92;
-  const GAME_BPM = { s1: 118, s2: 128, s3: 138 };
 
-  const SCALE = [0, 2, 3, 5, 7, 8, 10];
-  const ROOT = { title: 48, s1: 52, s2: 50, s3: 53 };
+  /**
+   * One original procedural “track” per mission level: BPM, root MIDI note, bass/lead degree patterns,
+   * mix levels, and rhythm (kick/hat divisors on the 16th-note grid).
+   */
+  const GAME_THEMES = [
+    {
+      id: 1,
+      name: "lab",
+      bpm: 115,
+      root: 52,
+      bassDeg: [0, 0, 5, 5, 3, 3, 7, 4],
+      lead: [0, 3, 5, 7, 5, 3, 2, 0, 3, 5, 7, 5, 3, 2, 0, 3],
+      bassGain: 0.064,
+      leadGain: 0.05,
+      accentGain: 0.032,
+      bassType: "square",
+      kickDiv: 16,
+      hatDiv: 4,
+      hatPhase: 2,
+    },
+    {
+      id: 2,
+      name: "training",
+      bpm: 122,
+      root: 51,
+      bassDeg: [0, 5, 3, 5, 7, 5, 0, 5],
+      lead: [0, 2, 3, 5, 7, 8, 7, 5, 3, 2, 0, 5, 7, 5, 3, 2],
+      bassGain: 0.062,
+      leadGain: 0.052,
+      accentGain: 0.03,
+      bassType: "square",
+      kickDiv: 16,
+      hatDiv: 4,
+      hatPhase: 2,
+    },
+    {
+      id: 3,
+      name: "dust",
+      bpm: 128,
+      root: 53,
+      bassDeg: [0, 7, 5, 3, 0, 5, 7, 4],
+      lead: [0, 5, 7, 10, 8, 7, 5, 3, 5, 7, 8, 7, 5, 3, 2, 0],
+      bassGain: 0.066,
+      leadGain: 0.05,
+      accentGain: 0.034,
+      bassType: "square",
+      kickDiv: 8,
+      hatDiv: 4,
+      hatPhase: 2,
+    },
+    {
+      id: 4,
+      name: "rift",
+      bpm: 134,
+      root: 55,
+      bassDeg: [0, 0, 7, 7, 5, 5, 3, 7],
+      lead: [0, 3, 5, 8, 7, 5, 3, 0, 5, 7, 10, 8, 7, 5, 3, 2],
+      bassGain: 0.068,
+      leadGain: 0.055,
+      accentGain: 0.035,
+      bassType: "square",
+      kickDiv: 16,
+      hatDiv: 2,
+      hatPhase: 1,
+    },
+    {
+      id: 5,
+      name: "citadel",
+      bpm: 120,
+      root: 50,
+      bassDeg: [0, 5, 3, 7, 0, 5, 3, 4],
+      lead: [0, 3, 5, 7, 8, 7, 5, 3, 2, 3, 5, 7, 5, 3, 0, 2],
+      bassGain: 0.063,
+      leadGain: 0.047,
+      accentGain: 0.03,
+      bassType: "triangle",
+      kickDiv: 16,
+      hatDiv: 4,
+      hatPhase: 2,
+    },
+    {
+      id: 6,
+      name: "boss",
+      bpm: 98,
+      root: 46,
+      bassDeg: [0, 0, 3, 3, 5, 5, 7, 2],
+      lead: [0, 1, 3, 5, 7, 8, 7, 5, 3, 2, 0, 5, 3, 2, 1, 0],
+      bassGain: 0.078,
+      leadGain: 0.056,
+      accentGain: 0.038,
+      bassType: "sawtooth",
+      kickDiv: 8,
+      hatDiv: 4,
+      hatPhase: 2,
+    },
+  ];
+
+  const ROOT = { title: 48 };
 
   function mtof(m) {
     return 440 * Math.pow(2, (m - 69) / 12);
@@ -110,24 +209,33 @@
     src.stop(time + dur + 0.05);
   }
 
-  function bassPattern(mode, step) {
-    const root = ROOT[mode === "title" ? "title" : sectorTag] || ROOT.s1;
+  function titleBassMidi(step) {
+    const root = ROOT.title;
     const deg = [0, 0, 5, 5, 3, 3, 7, 4][step % 8];
-    const oct = step % 8 === 6 ? -12 : -12;
-    return root + deg + oct;
+    return root + deg - 12;
   }
 
-  function leadPattern(mode, step) {
-    const root = ROOT[mode === "title" ? "title" : sectorTag] || ROOT.s1;
-    const pat =
-      mode === "title"
-        ? [0, 3, 5, 7, 5, 3, 2, 0, 3, 5, 8, 7, 5, 3, 0, 2]
-        : sectorTag === "s2"
-          ? [0, 2, 3, 5, 7, 5, 3, 2, 0, 3, 2, 0, 5, 7, 8, 7]
-          : sectorTag === "s3"
-            ? [0, 5, 7, 8, 7, 5, 3, 0, 5, 7, 10, 8, 7, 5, 3, 2]
-            : [0, 3, 5, 7, 8, 7, 5, 3, 5, 7, 8, 10, 8, 7, 5, 0];
+  function titleLeadMidi(step) {
+    const root = ROOT.title;
+    const pat = [0, 3, 5, 7, 5, 3, 2, 0, 3, 5, 8, 7, 5, 3, 0, 2];
     return root + pat[step % 16];
+  }
+
+  function scheduleMusicNoise(time, dur, gain) {
+    if (!ctx || !musicGain) return;
+    const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * dur));
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(gain, time);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+    src.connect(g);
+    g.connect(musicGain);
+    src.start(time);
+    src.stop(time + dur + 0.02);
   }
 
   function sixteenthDur(bpm) {
@@ -136,7 +244,8 @@
 
   function musicTick() {
     if (!ctx || pausedMusic || musicMode === "off") return;
-    const bpm = musicMode === "title" ? TITLE_BPM : GAME_BPM[sectorTag] || GAME_BPM.s1;
+    const bpm =
+      musicMode === "title" ? TITLE_BPM : GAME_THEMES[Math.max(0, Math.min(5, gameLevelId - 1))].bpm;
     const stepDur = sixteenthDur(bpm);
     const now = ctx.currentTime;
     const lookAhead = 0.14;
@@ -146,24 +255,32 @@
       const s = stepIndex;
       if (musicMode === "title") {
         if (s % 2 === 0) {
-          const m = bassPattern("title", Math.floor(s / 4));
+          const m = titleBassMidi(Math.floor(s / 4));
           scheduleTone(nextNoteTime, mtof(m), stepDur * 1.8, "triangle", 0.07, musicGain);
         }
         if (s % 4 === 0) {
-          const m = leadPattern("title", s);
+          const m = titleLeadMidi(s);
           scheduleTone(nextNoteTime, mtof(m + 12), stepDur * 0.9, "square", 0.04, musicGain);
         }
       } else {
+        const th = GAME_THEMES[Math.max(0, Math.min(5, gameLevelId - 1))];
         if (s % 2 === 0) {
-          const m = bassPattern("game", Math.floor(s / 4));
-          scheduleTone(nextNoteTime, mtof(m), stepDur * 1.6, "square", 0.065, musicGain);
+          const bi = Math.floor(s / 4) % 8;
+          const m = th.root + th.bassDeg[bi];
+          scheduleTone(nextNoteTime, mtof(m), stepDur * 1.62, th.bassType || "square", th.bassGain, musicGain);
         }
         if (s % 4 === 2) {
-          const m = leadPattern("game", s);
-          scheduleTone(nextNoteTime, mtof(m + 12), stepDur * 0.75, "square", 0.045, musicGain);
+          const m = th.root + th.lead[s % 16];
+          scheduleTone(nextNoteTime, mtof(m + 12), stepDur * 0.76, "square", th.leadGain, musicGain);
         }
         if (s % 8 === 0) {
-          scheduleTone(nextNoteTime, mtof(ROOT[sectorTag] + 24), stepDur * 0.4, "triangle", 0.03, musicGain);
+          scheduleTone(nextNoteTime, mtof(th.root + 24), stepDur * 0.42, "triangle", th.accentGain, musicGain);
+        }
+        if (th.kickDiv && s % th.kickDiv === 0) {
+          scheduleTone(nextNoteTime, 62, stepDur * 1.1, "sine", 0.085, musicGain);
+        }
+        if (th.hatDiv && s % th.hatDiv === th.hatPhase) {
+          scheduleMusicNoise(nextNoteTime, Math.min(0.04, stepDur * 2.2), 0.028);
         }
       }
       nextNoteTime += stepDur;
@@ -188,17 +305,17 @@
     if (!ctx) return;
     stopScheduledMusic();
     musicMode = "title";
-    sectorTag = "s1";
     pausedMusic = false;
     nextNoteTime = ctx.currentTime + 0.05;
   }
 
-  function startGameMusic(sector) {
+  function startGameMusic(levelId) {
     resume();
     if (!ctx) return;
     stopScheduledMusic();
     musicMode = "game";
-    sectorTag = sector >= 3 ? "s3" : sector >= 2 ? "s2" : "s1";
+    const lid = Number(levelId);
+    gameLevelId = Number.isFinite(lid) ? Math.max(1, Math.min(6, Math.floor(lid))) : 1;
     pausedMusic = false;
     nextNoteTime = ctx.currentTime + 0.05;
   }
@@ -334,8 +451,10 @@
     stopMusic,
     setPaused,
     playSfx,
-    setSectorFromIndex(sectorNum) {
-      sectorTag = sectorNum >= 3 ? "s3" : sectorNum >= 2 ? "s2" : "s1";
+    /** Switch in-level BGM to match mission 1–6 (procedural theme). */
+    setGameLevelMusic(levelId) {
+      const lid = Number(levelId);
+      gameLevelId = Number.isFinite(lid) ? Math.max(1, Math.min(6, Math.floor(lid))) : 1;
     },
   };
 })();

@@ -126,6 +126,148 @@ html, body {
   flex-shrink: 0;
 }
 
+.home-online {
+  max-width: min(36rem, 94vw);
+  margin: 0 auto 1.1rem;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  font-size: clamp(0.78rem, 2vw, 0.88rem);
+  line-height: 1.45;
+  color: #b8c0d8;
+  background: rgba(8, 10, 22, 0.65);
+  border: 1px solid rgba(100, 140, 255, 0.25);
+  border-radius: 8px;
+}
+
+.home-online-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #dce4ff;
+}
+
+.home-online-note {
+  margin: 0 0 0.65rem;
+  font-size: 0.82em;
+  color: var(--muted);
+}
+
+.home-online-note code {
+  font-size: 0.95em;
+  color: #a8b0c8;
+}
+
+.home-online-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.home-online-label {
+  flex: 0 0 auto;
+  font-weight: 500;
+  color: #c8d0e8;
+}
+
+.home-online-input {
+  flex: 1 1 10rem;
+  min-width: 8rem;
+  max-width: 100%;
+  padding: 0.4rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font: inherit;
+}
+
+.home-online-input:focus {
+  outline: none;
+  border-color: rgba(100, 160, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(100, 160, 255, 0.15);
+}
+
+.home-online-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.btn-online,
+.btn-online-go {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 160, 255, 0.45);
+  background: linear-gradient(180deg, rgba(40, 55, 95, 0.9), rgba(22, 28, 48, 0.95));
+  color: #e8ecff;
+  font: inherit;
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.btn-online:hover,
+.btn-online-go:hover {
+  border-color: rgba(130, 190, 255, 0.65);
+  background: linear-gradient(180deg, rgba(50, 68, 115, 0.95), rgba(28, 36, 58, 0.98));
+}
+
+.btn-online:focus-visible,
+.btn-online-go:focus-visible {
+  outline: 2px solid rgba(130, 190, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.home-online-code-input {
+  width: 6.5rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.home-online-status {
+  margin: 0.35rem 0 0.25rem;
+  min-height: 1.2em;
+  font-size: 0.88em;
+  color: #9aa6c4;
+}
+
+.home-online-code-line {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.9em;
+  color: #c8d4f0;
+}
+
+.home-online-code-line strong {
+  font-size: 1.15em;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+.btn-online-go {
+  width: 100%;
+  margin-top: 0.35rem;
+  border-color: rgba(0, 255, 200, 0.45);
+  background: linear-gradient(180deg, rgba(0, 90, 75, 0.55), rgba(12, 28, 32, 0.95));
+}
+
+.btn-online-go:hover {
+  border-color: rgba(0, 255, 200, 0.65);
+}
+
 .touch-hud {
   position: absolute;
   left: 0;
