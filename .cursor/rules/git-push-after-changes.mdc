@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Git: commit and push after changes
 
-For **Shard Circuit / VideoGameDesign** (`tsa-retro-revival-game`):
+For **Shard Circuit / VideoGameDesign**:
 
 1. After you finish **any** code or asset change the user asked for, run from the project root:
    - `git add` the relevant files (or `-A` if appropriate)
