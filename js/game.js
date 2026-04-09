@@ -76,6 +76,7 @@
       weaponCd: 0,
       speedBoostTimer: 0,
       teleportCd: 0,
+      spectating: false,
     };
   }
   let players = [newPlayerBody(), newPlayerBody()];
@@ -293,6 +294,7 @@
 
   function coopLinkActive() {
     if (!coopMode || plCount() < 2) return false;
+    if (netOnline && (players[0].spectating || players[1].spectating)) return false;
     const dx = players[0].x - players[1].x;
     const dy = players[0].y - players[1].y;
     return Math.hypot(dx, dy) < COOP_LINK_DIST;
@@ -386,6 +388,7 @@
 
   function resolvePlayerOverlap() {
     if (!coopMode) return;
+    if (netOnline && (players[0].spectating || players[1].spectating)) return;
     const a = players[0];
     const b = players[1];
     let dx = b.x + PLAYER_W * 0.5 - (a.x + PLAYER_W * 0.5);
@@ -488,6 +491,7 @@
    */
   function depenetratePlayer(pi) {
     const pl = players[pi];
+    if (netOnline && pl.spectating) return;
     if (!level || !overlapSolid(pl.x, pl.y, PLAYER_W, PLAYER_H)) return;
     const ox = pl.x;
     const oy = pl.y;
@@ -823,6 +827,8 @@
       players[0].y = clamp(p0.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
       players[1].x = clamp(p1.x, 0, W - PLAYER_W);
       players[1].y = clamp(p1.y, ORIGIN_Y, ORIGIN_Y + ROWS * TILE - PLAYER_H);
+      players[0].spectating = false;
+      players[1].spectating = false;
       spawnPts[0].x = players[0].x;
       spawnPts[0].y = players[0].y;
       spawnPts[1].x = players[1].x;
@@ -830,6 +836,7 @@
     } else {
       players[0].x = base.x;
       players[0].y = base.y;
+      players[0].spectating = false;
       spawnPts[0].x = base.x;
       spawnPts[0].y = base.y;
     }
@@ -976,6 +983,7 @@
   function tryFireWeapon(pi) {
     if (state !== "playing") return;
     const pl = players[pi];
+    if (netOnline && pl.spectating) return;
     if (!pl.weaponMode || pl.weaponCd > 0) return;
     const ax = pl.lastAimX;
     const ay = pl.lastAimY;
@@ -1045,7 +1053,35 @@
 
   function playerHit(pi, source) {
     const pl = players[pi];
+    if (pl.spectating) return;
     if (pl.invuln > 0) return;
+
+    if (netOnline) {
+      pl.spectating = true;
+      pl.pvx = 0;
+      pl.pvy = 0;
+      combo = 1;
+      comboTimer = 0;
+      shake = 0.4;
+      A.playSfx("hit");
+      addParticles(pl.x + PLAYER_W * 0.5, pl.y + PLAYER_H * 0.5, "#ff3d7f", 12);
+      netBroadcastSnapshot();
+      if (players[0].spectating && players[1].spectating) {
+        for (let i = 0; i < plCount(); i++) {
+          players[i].pvx = 0;
+          players[i].pvy = 0;
+        }
+        flushLocalInput();
+        if (netIsHost && window.GRPParty && GRPParty.resetRemoteInput) GRPParty.resetRemoteInput();
+        state = "gameover";
+        A.stopMusic();
+        A.playSfx("game_over");
+        showOverlay();
+        netBroadcastSnapshot();
+      }
+      return;
+    }
+
     lives -= 1;
     combo = 1;
     comboTimer = 0;
@@ -1161,6 +1197,7 @@
       weaponMode: pl.weaponMode,
       speedBoostTimer: pl.speedBoostTimer,
       teleportCd: pl.teleportCd,
+      spectating: !!pl.spectating,
     }));
     return {
       gs: state,
@@ -1271,10 +1308,14 @@
       const P = window.GRPParty;
       if (P) {
         if (state === "playing") {
-          const km = keyboardMove(1);
-          const m = mergeMove(1, km.ix, km.iy);
-          const fire = touchPad[1].firing || !!keys.ShiftRight;
-          P.sendInput(m.ix, m.iy, fire);
+          if (players[1].spectating) {
+            P.sendInput(0, 0, false);
+          } else {
+            const km = keyboardMove(1);
+            const m = mergeMove(1, km.ix, km.iy);
+            const fire = touchPad[1].firing || !!keys.ShiftRight;
+            P.sendInput(m.ix, m.iy, fire);
+          }
         } else {
           P.sendInput(0, 0, false);
         }
@@ -1310,6 +1351,7 @@
 
     for (let pi = 0; pi < n; pi++) {
       const pl = players[pi];
+      if (netOnline && pl.spectating) continue;
       const km = keyboardMove(pi);
       let { ix, iy } = mergeMove(pi, km.ix, km.iy);
       if (ix !== 0 || iy !== 0) {
@@ -1350,6 +1392,7 @@
 
     for (let pi = 0; pi < n; pi++) {
       const pl = players[pi];
+      if (netOnline && pl.spectating) continue;
       if (pl.teleportCd <= 0 && level.teleporterPairs && level.teleporterPairs.length) {
         const tcx = Math.floor((pl.x + PLAYER_W * 0.5) / TILE);
         const tcy = Math.floor((pl.y + PLAYER_H * 0.5 - ORIGIN_Y) / TILE);
@@ -1388,6 +1431,7 @@
       if (lt >= PULSE_WARN && lt < PULSE_WARN + PULSE_ACTIVE) {
         for (let pi = 0; pi < n; pi++) {
           const pl = players[pi];
+          if (pl.spectating) continue;
           const pcx = pl.x + PLAYER_W * 0.5;
           const pcy = pl.y + PLAYER_H * 0.5;
           const d = Math.hypot(pcx - cx, pcy - cy);
@@ -1408,6 +1452,7 @@
       let touched = false;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
         if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, s.x, s.y, s.w, s.h)) {
           touched = true;
           break;
@@ -1452,6 +1497,7 @@
       let got = false;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
         if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, sc.x, sc.y, sc.w, sc.h)) {
           got = true;
           break;
@@ -1476,6 +1522,7 @@
       let picker = -1;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
         if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, pu.x, pu.y, pu.w, pu.h)) {
           picker = pi;
           break;
@@ -1487,8 +1534,13 @@
       A.playSfx("powerup");
       addParticles(pu.x + 3, pu.y + 3, "#ffffff", 12);
       if (pu.kind === "life") {
-        lives = Math.min(MAX_LIVES, lives + 1);
-        popFloat(pu.x, pu.y, "+1 UP", "#ff6b9d");
+        if (netOnline) {
+          score += 500;
+          popFloat(pu.x, pu.y, "+500", "#ff6b9d");
+        } else {
+          lives = Math.min(MAX_LIVES, lives + 1);
+          popFloat(pu.x, pu.y, "+1 UP", "#ff6b9d");
+        }
       } else if (pu.kind === "haste") {
         pl.speedBoostTimer = Math.max(pl.speedBoostTimer, 5.2);
         popFloat(pu.x, pu.y, "HASTE", "#40d8ff");
@@ -1586,6 +1638,7 @@
       if (e.type === "boss" && e.dead) continue;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
         if (pl.invuln <= 0 && pl.hazardCd <= 0 && aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, e.x, e.y, e.w, e.h)) {
           playerHit(pi, "enemy");
           break;
@@ -1596,14 +1649,17 @@
     if (exitUnlocked()) {
       const er = exitRect();
       let allIn = true;
+      let anyAlive = false;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
+        anyAlive = true;
         if (!aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, er.x + 2, er.y + 2, er.w - 4, er.h - 4)) {
           allIn = false;
           break;
         }
       }
-      if (allIn) completeLevel();
+      if (anyAlive && allIn) completeLevel();
     }
 
     for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -1618,6 +1674,7 @@
       let hit = false;
       for (let pi = 0; pi < n; pi++) {
         const pl = players[pi];
+        if (pl.spectating) continue;
         if (pl.invuln <= 0 && pl.hazardCd <= 0) {
           if (aabb(pl.x, pl.y, PLAYER_W, PLAYER_H, b.x, b.y, PROJ_SZ, PROJ_SZ)) {
             projectiles.splice(i, 1);
@@ -1665,6 +1722,7 @@
     for (let pi = 0; pi < n; pi++) {
       const pl = players[pi];
       const trl = trail[pi];
+      if (netOnline && pl.spectating) continue;
       if (Math.abs(pl.pvx) + Math.abs(pl.pvy) > 25) {
         trl.push({
           x: pl.x,
@@ -2361,12 +2419,21 @@
     const py = pl.y | 0;
     const pFlash = pl.invuln > 0 && Math.floor(levelTime * 12) % 2 === 0;
     const pal = paletteForPlayer(pi);
+    const spec = netOnline && pl.spectating;
+    if (spec) ctx.save();
+    if (spec) ctx.globalAlpha = 0.4;
     paintPilotFigure(ctx, px, py, pal, levelTime, pFlash);
     const nm = playerNames && playerNames[pi] ? String(playerNames[pi]).slice(0, 14) : "";
     if (nm) {
       ctx.font = "5px monospace";
       ctx.fillStyle = pal.tag;
       ctx.fillText(nm, px, py - 2);
+    }
+    if (spec) {
+      ctx.globalAlpha = 0.65;
+      ctx.font = "4px monospace";
+      ctx.fillStyle = "rgba(200,200,220,0.9)";
+      ctx.fillText("OUT", px + 1, py + PLAYER_H + 3);
     }
     if (pl.weaponMode === "raygun") {
       const fx = pl.lastAimX >= 0 ? px + PLAYER_W - 2 : px - 3;
@@ -2382,6 +2449,7 @@
       ctx.fillStyle = blade;
       ctx.fillRect(hx + (pl.lastAimX >= 0 ? 2 : -2), py + 2, 2, 4);
     }
+    if (spec) ctx.restore();
   }
 
   function drawParticles() {
@@ -2465,11 +2533,19 @@
       coopMode && playerNames[0] && playerNames[1]
         ? `${playerNames[0].slice(0, 10)} · ${playerNames[1].slice(0, 10)}`
         : "";
-    livesLabel.textContent = coopMode
-      ? nameHud
-        ? `LIVES ${lives} · ${nameHud}`
-        : `LIVES ${lives} · CO-OP`
-      : `LIVES ${lives}`;
+    if (netOnline && coopMode) {
+      const n0 = (playerNames[0] || "P1").slice(0, 9);
+      const n1 = (playerNames[1] || "P2").slice(0, 9);
+      const s0 = players[0].spectating ? "OUT" : "OK";
+      const s1 = players[1].spectating ? "OUT" : "OK";
+      livesLabel.textContent = `${n0} ${s0} · ${n1} ${s1}`;
+    } else {
+      livesLabel.textContent = coopMode
+        ? nameHud
+          ? `LIVES ${lives} · ${nameHud}`
+          : `LIVES ${lives} · CO-OP`
+        : `LIVES ${lives}`;
+    }
 
     if (level) {
       levelLabel.textContent = level.isBoss
@@ -2488,8 +2564,9 @@
       else if (o.kind === "boss_exit")
         obj = `Space swings the cutter. Every green chip you grab takes a bite out of Cinder. When Cinder falls, head for the door.`;
       if (coopMode) {
-        obj +=
-          " Co-op: P1 WASD + Space, P2 arrows + Right Shift. Stay close for link bonus chips. Both must reach the exit.";
+        obj += netOnline
+          ? " Online: one hit and you are out (spectate). Partner can still clear the stage. Exit needs every pilot still up."
+          : " Co-op: P1 WASD + Space, P2 arrows + Right Shift. Stay close for link bonus chips. Both must reach the exit.";
       } else if (players[0].weaponMode === "raygun")
         obj += " Space fires the sidearm (aim follows your last move).";
       objectiveLine.textContent = `Objective: ${obj}`;
@@ -2548,10 +2625,12 @@
     } else if (state === "gameover") {
       if (netOnline && !netIsHost) {
         if (btnStart) btnStart.disabled = true;
-        panelText.textContent = `Out of lives. Score: ${score}. Only the host can retry or return home.`;
+        panelText.textContent = `Both pilots down. Score: ${score}. Only the host can retry or return home.`;
       } else {
         if (btnStart) btnStart.disabled = false;
-        panelText.textContent = `Out of lives. Score: ${score}. Retry ${level.name}?`;
+        panelText.textContent = netOnline
+          ? `Both pilots down. Score: ${score}. Retry ${level.name}?`
+          : `Out of lives. Score: ${score}. Retry ${level.name}?`;
       }
       panelTitle.textContent = "GAME OVER";
       btnStart.textContent = "Retry Level";
