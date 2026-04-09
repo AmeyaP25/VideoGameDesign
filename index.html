@@ -93,6 +93,21 @@
         <span>2-player co-op (shared lives · both reach exit)</span>
       </label>
 
+      <section class="home-customize" id="homeCustomize" aria-labelledby="customizeHeading">
+        <h2 id="customizeHeading">Pilot look</h2>
+        <p class="home-customize-hint">Choose suit colors for each pilot. They appear in-game above your name tag.</p>
+        <div class="home-look-row">
+          <span class="home-look-label">Pilot 1</span>
+          <canvas id="lookPreviewP1" width="36" height="48" class="home-look-preview" aria-hidden="true"></canvas>
+          <div class="home-look-presets" id="homeLookPresetsP1" role="group" aria-label="Pilot 1 suit"></div>
+        </div>
+        <div class="home-look-row" id="homeLookP2Wrap" hidden>
+          <span class="home-look-label">Pilot 2</span>
+          <canvas id="lookPreviewP2" width="36" height="48" class="home-look-preview" aria-hidden="true"></canvas>
+          <div class="home-look-presets" id="homeLookPresetsP2" role="group" aria-label="Pilot 2 suit"></div>
+        </div>
+      </section>
+
       <section class="home-online" id="homeOnline" aria-labelledby="onlineHeading">
         <h2 id="onlineHeading" class="home-online-title">Play online (2 players)</h2>
         <p class="home-online-note" id="netConfigNote">

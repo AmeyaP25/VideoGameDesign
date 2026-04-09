@@ -13,11 +13,12 @@
 
 html, body {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: "Segoe UI", system-ui, sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 #wrap {
@@ -124,6 +125,102 @@ html, body {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
+}
+
+.home-customize {
+  width: 100%;
+  max-width: min(40rem, 94vw);
+  margin: 0 auto 1.25rem;
+  padding: 1rem 1.1rem 1.15rem;
+  text-align: left;
+  background: rgba(8, 12, 24, 0.82);
+  border: 1px solid rgba(0, 255, 200, 0.18);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 61, 127, 0.06);
+}
+
+.home-customize h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.home-customize-hint {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  line-height: 1.45;
+  color: #9aa4bc;
+}
+
+.home-look-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.home-look-row:last-child {
+  margin-bottom: 0;
+}
+
+.home-look-label {
+  flex: 0 0 5.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b8c8e8;
+}
+
+.home-look-preview {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 72px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.home-look-presets {
+  flex: 1 1 12rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.home-look-preset {
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 22, 36, 0.95);
+  color: #d8dce8;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.home-look-preset:hover {
+  border-color: rgba(0, 255, 200, 0.45);
+  background: rgba(24, 36, 48, 0.98);
+}
+
+.home-look-preset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home-look-preset.is-selected {
+  border-color: rgba(0, 255, 200, 0.65);
+  box-shadow: 0 0 0 1px rgba(0, 255, 200, 0.25);
+  color: #f0fff8;
 }
 
 .home-online {
@@ -535,12 +632,15 @@ kbd {
   outline-offset: 3px;
 }
 
-/* Title / home screen */
+/* Title / home screen (scrollable when content is taller than the viewport) */
 .home-screen {
   position: fixed;
   inset: 0;
   z-index: 8;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   display: flex;
   flex-direction: column;
 }
@@ -557,20 +657,15 @@ kbd {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: clamp(1.25rem, 5vw, 3rem);
-  padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
+  justify-content: flex-start;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 6vh, 3.5rem);
   margin: 0;
   text-align: center;
   box-sizing: border-box;
-  /* Sit a bit higher than dead-center so the stack breathes at the bottom */
-  transform: translateY(-7vh);
 }
 
 .home-kicker {

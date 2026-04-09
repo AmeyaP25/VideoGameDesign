@@ -87,6 +87,101 @@
   let lastSyncedNetGs = "";
   let playerNames = ["Juno", "Kai"];
 
+  /** Suit palettes (body / trim / jets). Index stored per pilot in `playerLook`. */
+  const CHAR_PRESETS = [
+    {
+      name: "ARC teal",
+      body: "#4a9088",
+      bodyFlash: "#c8e0d8",
+      face: "#f2f4f0",
+      stripe: "#e89840",
+      jet: "#40ffc8",
+      pack: "#2a4550",
+      packDeep: "#1a3040",
+      rim: "#1a5048",
+      hand: "#0a2820",
+      tag: "rgba(0,255,200,0.92)",
+    },
+    {
+      name: "Violet",
+      body: "#9060a0",
+      bodyFlash: "#e8d0e8",
+      face: "#ffe8f8",
+      stripe: "#ff80c8",
+      jet: "#ff80d8",
+      pack: "#502848",
+      packDeep: "#301828",
+      rim: "#501838",
+      hand: "#0a2820",
+      tag: "rgba(255,160,210,0.95)",
+    },
+    {
+      name: "Amber",
+      body: "#a87840",
+      bodyFlash: "#f0e0c8",
+      face: "#fff8f0",
+      stripe: "#ff9840",
+      jet: "#ffc860",
+      pack: "#503828",
+      packDeep: "#382418",
+      rim: "#604018",
+      hand: "#0a2820",
+      tag: "rgba(255,200,120,0.92)",
+    },
+    {
+      name: "Ice",
+      body: "#5088b0",
+      bodyFlash: "#d0e8ff",
+      face: "#e8f4ff",
+      stripe: "#80c8ff",
+      jet: "#a0e8ff",
+      pack: "#284058",
+      packDeep: "#182838",
+      rim: "#204060",
+      hand: "#0a1820",
+      tag: "rgba(140,200,255,0.92)",
+    },
+    {
+      name: "Crimson",
+      body: "#a04858",
+      bodyFlash: "#ffd0d8",
+      face: "#ffe8ec",
+      stripe: "#ff7088",
+      jet: "#ff9098",
+      pack: "#502028",
+      packDeep: "#381018",
+      rim: "#601828",
+      hand: "#0a1010",
+      tag: "rgba(255,140,160,0.92)",
+    },
+    {
+      name: "Lime ops",
+      body: "#5a9850",
+      bodyFlash: "#d8f8d0",
+      face: "#f0fff0",
+      stripe: "#c0f070",
+      jet: "#a0ff80",
+      pack: "#284828",
+      packDeep: "#183018",
+      rim: "#206018",
+      hand: "#0a2010",
+      tag: "rgba(160,255,140,0.92)",
+    },
+  ];
+  let playerLook = [0, 1];
+  try {
+    const a = localStorage.getItem("shard_look_0");
+    const b = localStorage.getItem("shard_look_1");
+    if (a != null && a !== "") {
+      const n = parseInt(a, 10);
+      if (Number.isFinite(n)) playerLook[0] = Math.max(0, Math.min(CHAR_PRESETS.length - 1, n));
+    }
+    if (b != null && b !== "") {
+      const n = parseInt(b, 10);
+      if (Number.isFinite(n)) playerLook[1] = Math.max(0, Math.min(CHAR_PRESETS.length - 1, n));
+    }
+  } catch (_) {}
+
   let spawnPts = [
     { x: 0, y: 0 },
     { x: 0, y: 0 },
@@ -2146,74 +2241,103 @@
     }
   }
 
+  function pilotPaletteFromIndex(idx) {
+    const i = clamp(idx | 0, 0, CHAR_PRESETS.length - 1);
+    return CHAR_PRESETS[i];
+  }
+
+  function paletteForPlayer(pi) {
+    return pilotPaletteFromIndex(playerLook[pi]);
+  }
+
+  /** Shared sprite paint for in-game pilot and home preview (`targetCtx` may be main canvas or preview). */
+  function paintPilotFigure(targetCtx, px, py, pal, animT, invulnFlash) {
+    const bodyTint = invulnFlash ? pal.bodyFlash : pal.body;
+    const packCol = pal.pack;
+    const packDeep = pal.packDeep;
+    const jetCol = pal.jet;
+    const stripeCol = pal.stripe;
+    const faceHi = pal.face;
+    const drawExtras = (ox, oy, packA, jetA) => {
+      targetCtx.globalAlpha = packA;
+      targetCtx.fillStyle = packCol;
+      targetCtx.fillRect(px - 2 + ox, py + 3 + oy, 3, 10);
+      targetCtx.fillStyle = packDeep;
+      targetCtx.fillRect(px - 2 + ox, py + 5 + oy, 2, 6);
+      targetCtx.globalAlpha = jetA;
+      const flick = (Math.floor(animT * 18) % 2) * 0.5;
+      targetCtx.fillStyle = jetCol;
+      targetCtx.fillRect(px + 1 + ox, py + 11 + oy, 3, 1 + flick);
+      targetCtx.fillRect(px + PLAYER_W - 4 + ox, py + 11 + oy, 3, 1 + flick);
+      targetCtx.globalAlpha = 1;
+      targetCtx.fillStyle = jetCol;
+      targetCtx.fillRect(px + 3 + ox, py - 5 + oy, 2, 2);
+      targetCtx.fillRect(px + 4 + ox, py - 6 + oy, 1, 2);
+    };
+    const drawBody = (ox, oy, rgb, rim, handCol) => {
+      targetCtx.fillStyle = rgb;
+      targetCtx.fillRect(px + ox, py + oy, PLAYER_W, PLAYER_H - 4);
+      targetCtx.fillRect(px + 1 + ox, py - 2 + oy, PLAYER_W - 2, 3);
+      if (rim) {
+        targetCtx.strokeStyle = rim;
+        targetCtx.lineWidth = 1;
+        targetCtx.strokeRect(px + ox, py + oy, PLAYER_W - 1, PLAYER_H - 5);
+      }
+      targetCtx.fillStyle = handCol;
+      targetCtx.fillRect(px + 2 + ox, py + 4 + oy, 2, 2);
+      targetCtx.fillRect(px + PLAYER_W - 4 + ox, py + 4 + oy, 2, 2);
+    };
+    const drawFace = (ox, oy, eyeHi, mouthCol) => {
+      targetCtx.fillStyle = "#1a3c44";
+      targetCtx.fillRect(px + 1 + ox, py + 1 + oy, PLAYER_W - 2, 5);
+      targetCtx.fillStyle = eyeHi;
+      targetCtx.fillRect(px + 2 + ox, py + 2 + oy, 3, 3);
+      targetCtx.fillRect(px + PLAYER_W - 5 + ox, py + 2 + oy, 3, 3);
+      targetCtx.fillStyle = "#061810";
+      targetCtx.fillRect(px + 3 + ox, py + 3 + oy, 1, 2);
+      targetCtx.fillRect(px + PLAYER_W - 4 + ox, py + 3 + oy, 1, 2);
+      targetCtx.fillStyle = mouthCol;
+      targetCtx.fillRect(px + 3 + ox, py + 8 + oy, PLAYER_W - 6, 1);
+    };
+    const drawSuitDetail = (ox, oy, stripe, deep) => {
+      targetCtx.fillStyle = deep;
+      targetCtx.fillRect(px + 1 + ox, py + 5 + oy, 2, 4);
+      targetCtx.fillRect(px + PLAYER_W - 3 + ox, py + 5 + oy, 2, 4);
+      targetCtx.fillStyle = stripe;
+      targetCtx.fillRect(px + 3 + ox, py + 6 + oy, PLAYER_W - 6, 2);
+      targetCtx.fillRect(px + 3 + ox, py + 9 + oy, PLAYER_W - 6, 1);
+    };
+    drawBody(0, 0, bodyTint, pal.rim, pal.hand);
+    drawExtras(0, 0, 1, 1);
+    drawFace(0, 0, faceHi, "#0a2820");
+    drawSuitDetail(0, 0, stripeCol, "#0a2820");
+  }
+
+  function drawPilotLookPreview(canvas, lookIdx) {
+    if (!canvas || !canvas.getContext) return;
+    const c2 = canvas.getContext("2d", { alpha: false });
+    const pal = pilotPaletteFromIndex(lookIdx);
+    const w = canvas.width;
+    const h = canvas.height;
+    c2.fillStyle = "#06060c";
+    c2.fillRect(0, 0, w, h);
+    const animT = performance.now() * 0.001;
+    const px = ((w - PLAYER_W) * 0.5) | 0;
+    const py = ((h - PLAYER_H) * 0.5 + 4) | 0;
+    paintPilotFigure(c2, px, py, pal, animT, false);
+  }
+
   function drawPlayer(pi) {
     const pl = players[pi];
     const px = pl.x | 0;
     const py = pl.y | 0;
     const pFlash = pl.invuln > 0 && Math.floor(levelTime * 12) % 2 === 0;
-    const bodyTint = pi === 0 ? (pFlash ? "#c8e0d8" : "#4a9088") : pFlash ? "#e8d0e8" : "#9060a0";
-    const faceHi = pi === 0 ? "#f2f4f0" : "#ffe8f8";
-    const stripeCol = pi === 0 ? "#e89840" : "#ff80c8";
-    const jetCol = pi === 0 ? "#40ffc8" : "#ff80d8";
-    const packCol = pi === 0 ? "#2a4550" : "#502848";
-    const packDeep = pi === 0 ? "#1a3040" : "#301828";
-    const drawExtras = (ox, oy, packA, jetA) => {
-      ctx.globalAlpha = packA;
-      ctx.fillStyle = packCol;
-      ctx.fillRect(px - 2 + ox, py + 3 + oy, 3, 10);
-      ctx.fillStyle = packDeep;
-      ctx.fillRect(px - 2 + ox, py + 5 + oy, 2, 6);
-      ctx.globalAlpha = jetA;
-      const flick = (Math.floor(levelTime * 18) % 2) * 0.5;
-      ctx.fillStyle = jetCol;
-      ctx.fillRect(px + 1 + ox, py + 11 + oy, 3, 1 + flick);
-      ctx.fillRect(px + PLAYER_W - 4 + ox, py + 11 + oy, 3, 1 + flick);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = jetCol;
-      ctx.fillRect(px + 3 + ox, py - 5 + oy, 2, 2);
-      ctx.fillRect(px + 4 + ox, py - 6 + oy, 1, 2);
-    };
-    const drawBody = (ox, oy, rgb, rim, handCol) => {
-      ctx.fillStyle = rgb;
-      ctx.fillRect(px + ox, py + oy, PLAYER_W, PLAYER_H - 4);
-      ctx.fillRect(px + 1 + ox, py - 2 + oy, PLAYER_W - 2, 3);
-      if (rim) {
-        ctx.strokeStyle = rim;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px + ox, py + oy, PLAYER_W - 1, PLAYER_H - 5);
-      }
-      ctx.fillStyle = handCol;
-      ctx.fillRect(px + 2 + ox, py + 4 + oy, 2, 2);
-      ctx.fillRect(px + PLAYER_W - 4 + ox, py + 4 + oy, 2, 2);
-    };
-    const drawFace = (ox, oy, eyeHi, mouthCol) => {
-      ctx.fillStyle = "#1a3c44";
-      ctx.fillRect(px + 1 + ox, py + 1 + oy, PLAYER_W - 2, 5);
-      ctx.fillStyle = eyeHi;
-      ctx.fillRect(px + 2 + ox, py + 2 + oy, 3, 3);
-      ctx.fillRect(px + PLAYER_W - 5 + ox, py + 2 + oy, 3, 3);
-      ctx.fillStyle = "#061810";
-      ctx.fillRect(px + 3 + ox, py + 3 + oy, 1, 2);
-      ctx.fillRect(px + PLAYER_W - 4 + ox, py + 3 + oy, 1, 2);
-      ctx.fillStyle = mouthCol;
-      ctx.fillRect(px + 3 + ox, py + 8 + oy, PLAYER_W - 6, 1);
-    };
-    const drawSuitDetail = (ox, oy, stripe, deep) => {
-      ctx.fillStyle = deep;
-      ctx.fillRect(px + 1 + ox, py + 5 + oy, 2, 4);
-      ctx.fillRect(px + PLAYER_W - 3 + ox, py + 5 + oy, 2, 4);
-      ctx.fillStyle = stripe;
-      ctx.fillRect(px + 3 + ox, py + 6 + oy, PLAYER_W - 6, 2);
-      ctx.fillRect(px + 3 + ox, py + 9 + oy, PLAYER_W - 6, 1);
-    };
-    drawBody(0, 0, bodyTint, pi === 0 ? "#1a5048" : "#501838", "#0a2820");
-    drawExtras(0, 0, 1, 1);
-    drawFace(0, 0, faceHi, "#0a2820");
-    drawSuitDetail(0, 0, stripeCol, "#0a2820");
+    const pal = paletteForPlayer(pi);
+    paintPilotFigure(ctx, px, py, pal, levelTime, pFlash);
     const nm = playerNames && playerNames[pi] ? String(playerNames[pi]).slice(0, 14) : "";
     if (nm) {
       ctx.font = "5px monospace";
-      ctx.fillStyle = pi === 0 ? "rgba(0,255,200,0.92)" : "rgba(255,160,210,0.95)";
+      ctx.fillStyle = pal.tag;
       ctx.fillText(nm, px, py - 2);
     }
     if (pl.weaponMode === "raygun") {
@@ -2599,6 +2723,50 @@
     });
   }
 
+  function syncHomeLookP2Visibility() {
+    const wrap = document.getElementById("homeLookP2Wrap");
+    if (!wrap || !homeCoopMode) return;
+    wrap.hidden = !homeCoopMode.checked;
+  }
+
+  function initPilotCustomize() {
+    function bindRow(pi, containerId, previewId) {
+      const container = document.getElementById(containerId);
+      const preview = document.getElementById(previewId);
+      if (!container || !preview) return;
+
+      function applySelection(idx) {
+        playerLook[pi] = clamp(idx | 0, 0, CHAR_PRESETS.length - 1);
+        try {
+          localStorage.setItem("shard_look_" + pi, String(playerLook[pi]));
+        } catch (_) {}
+        const buttons = container.querySelectorAll(".home-look-preset");
+        buttons.forEach((btn, i) => {
+          btn.classList.toggle("is-selected", i === playerLook[pi]);
+        });
+        drawPilotLookPreview(preview, playerLook[pi]);
+      }
+
+      container.innerHTML = "";
+      CHAR_PRESETS.forEach((preset, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "home-look-preset";
+        btn.textContent = preset.name;
+        btn.addEventListener("click", () => applySelection(idx));
+        container.appendChild(btn);
+      });
+      applySelection(playerLook[pi]);
+    }
+
+    bindRow(0, "homeLookPresetsP1", "lookPreviewP1");
+    bindRow(1, "homeLookPresetsP2", "lookPreviewP2");
+    syncHomeLookP2Visibility();
+    if (homeCoopMode) {
+      homeCoopMode.addEventListener("change", syncHomeLookP2Visibility);
+    }
+  }
+
   function initOnlineUI() {
     const note = document.getElementById("netConfigNote");
     const P = window.GRPParty;
@@ -2847,6 +3015,7 @@
   }
 
   initTouchControls();
+  initPilotCustomize();
   initOnlineUI();
   window.addEventListener("resize", () => {
     if (state === "playing") syncTouchLayer();
