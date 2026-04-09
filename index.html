@@ -192,13 +192,15 @@
       <button type="button" id="btnStart">Continue</button>
     </div>
   </div>
+  <!-- netconfig must run first (sync). Other scripts use defer so they run after the document is parsed,
+       in order: party.mjs (module) then audio → … → game.js. That way window.GRPParty exists before game.js runs. -->
   <script src="js/netconfig.js"></script>
   <script type="module" src="js/party.mjs"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/story.js"></script>
-  <script src="js/cutscene-voice.js"></script>
-  <script src="js/home.js"></script>
-  <script src="js/levels.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/audio.js" defer></script>
+  <script src="js/story.js" defer></script>
+  <script src="js/cutscene-voice.js" defer></script>
+  <script src="js/home.js" defer></script>
+  <script src="js/levels.js" defer></script>
+  <script src="js/game.js" defer></script>
 </body>
 </html>

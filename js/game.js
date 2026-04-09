@@ -2602,7 +2602,16 @@
   function initOnlineUI() {
     const note = document.getElementById("netConfigNote");
     const P = window.GRPParty;
-    if (note && P && P.netConfigured()) note.style.display = "none";
+    if (!P || typeof P.createParty !== "function") {
+      const st = document.getElementById("netPartyStatus");
+      if (st) {
+        st.textContent =
+          "Online module did not load. Use a local or HTTPS server (not file://) and refresh.";
+      }
+      console.error("[Shard] GRPParty missing — party.mjs did not run before game.js.");
+      return;
+    }
+    if (note && P.netConfigured()) note.style.display = "none";
 
     const dn = document.getElementById("netDisplayName");
     if (dn) {

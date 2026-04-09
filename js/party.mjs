@@ -2,7 +2,7 @@
  * Online party: Supabase Realtime broadcast (no server code required).
  * Host runs the game; joiner sends P2 input and applies state snapshots from host.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm";
 
 let supabase = null;
 let channel = null;
@@ -86,12 +86,32 @@ export async function createParty() {
   });
   channel.on("broadcast", { event: "m" }, handleBroadcast);
   return new Promise((resolve, reject) => {
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        subscribed = true;
-        resolve({ code: partyCode, id: myId });
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("Subscribe timed out — enable Realtime in Supabase and check your network."));
       }
-      if (status === "CHANNEL_ERROR") reject(new Error("subscribe failed"));
+    }, 25000);
+    const finish = (fn) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+    channel.subscribe((status, err) => {
+      if (status === "SUBSCRIBED") {
+        finish(() => {
+          subscribed = true;
+          resolve({ code: partyCode, id: myId });
+        });
+        return;
+      }
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        finish(() =>
+          reject(new Error((err && err.message) || `Realtime: ${status}`))
+        );
+      }
     });
   });
 }
@@ -113,13 +133,33 @@ export async function joinParty(code) {
   });
   channel.on("broadcast", { event: "m" }, handleBroadcast);
   return new Promise((resolve, reject) => {
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        subscribed = true;
-        send({ t: "hi", from: myId, name: window.__netDisplayName || "Player", host: false });
-        resolve({ code: partyCode, id: myId });
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("Subscribe timed out — enable Realtime in Supabase and check your network."));
       }
-      if (status === "CHANNEL_ERROR") reject(new Error("subscribe failed"));
+    }, 25000);
+    const finish = (fn) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+    channel.subscribe((status, err) => {
+      if (status === "SUBSCRIBED") {
+        finish(() => {
+          subscribed = true;
+          send({ t: "hi", from: myId, name: window.__netDisplayName || "Player", host: false });
+          resolve({ code: partyCode, id: myId });
+        });
+        return;
+      }
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        finish(() =>
+          reject(new Error((err && err.message) || `Realtime: ${status}`))
+        );
+      }
     });
   });
 }
